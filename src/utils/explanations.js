@@ -34,7 +34,7 @@ const RULES = [
       const opts = q.options.join(' ').toLowerCase()
       return /\b(is|are|am)\b/.test(opts) && /\b(is|are|am)\b/.test(q.correctAnswer.toLowerCase())
     },
-    build: (q) => ({
+    build: (_q) => ({
       explain: `"Is" is for one person or thing. "Are" is for more than one. "Am" goes with "I".`,
       example: `👉 "She is happy." "They are friends." "I am ready."`,
     }),
@@ -131,7 +131,7 @@ const RULES = [
       const opts = q.options.map((o) => o.toLowerCase())
       return opts.includes('have') && opts.includes('has')
     },
-    build: (q) => ({
+    build: (_q) => ({
       explain: `Use "has" with he, she, or it. Use "have" with I, you, we, or they.`,
       example: `👉 "She has a cat." "They have a dog."`,
     }),

@@ -19,9 +19,9 @@ export default function QuestionCard({ question, index, questionNumber, selected
     if (answered) {
       const timer = setTimeout(() => setShowExplanation(true), 400)
       return () => clearTimeout(timer)
-    } else {
-      setShowExplanation(false)
     }
+    const timer = setTimeout(() => setShowExplanation(false), 0)
+    return () => clearTimeout(timer)
   }, [answered])
 
   const getOptionStyle = (option) => {
