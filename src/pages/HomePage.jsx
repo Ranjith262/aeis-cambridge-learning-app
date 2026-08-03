@@ -19,7 +19,7 @@ const PASTEL_ISLAND = [
   'bg-sky/30', 'bg-mint/40', 'bg-peach/40', 'bg-butter/50', 'bg-coral/30',
 ]
 
-export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds }) {
+export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds, onAddition, onSubtraction }) {
   const [activeSubject, setActiveSubject] = useState('math')
   const [profile, setProfile] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -145,6 +145,20 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
           </div>
         </div>
       </button>
+
+
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <button type="button" onClick={onAddition} className="rounded-2xl p-4 text-left shadow-soft border-2 border-mint/50" style={{ background: 'linear-gradient(135deg,#E8F5E9,#E3F2FD)' }}>
+          <div className="text-3xl mb-1">➕</div>
+          <div className="font-black text-ink text-sm">Addition Island</div>
+          <div className="text-[10px] text-ink/60">Join · count on · make ten</div>
+        </button>
+        <button type="button" onClick={onSubtraction} className="rounded-2xl p-4 text-left shadow-soft border-2 border-coral/40" style={{ background: 'linear-gradient(135deg,#FBE9E7,#FFF3E0)' }}>
+          <div className="text-3xl mb-1">➖</div>
+          <div className="font-black text-ink text-sm">Subtraction Island</div>
+          <div className="text-[10px] text-ink/60">Take away · count back</div>
+        </button>
+      </div>
 
       {/* Main action hub */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">

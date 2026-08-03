@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PvCinema from '../world/placeValue/PvCinema'
 import BlockStage from '../world/placeValue/BlockStage'
@@ -6,6 +6,7 @@ import { generatePlaceValueSession } from '../world/placeValue/pvGenerator'
 import { recordPvResult, pvMasteryPct, pvParentLine, loadPvLearner } from '../world/placeValue/pvLearner'
 import Celebration from '../components/Celebration'
 import Mascot, { pickLine } from '../components/Mascot'
+import { markIslandVisit } from '../utils/islandUnlocks'
 
 /**
  * Phase 1 vertical slice — Place Value Island
@@ -20,6 +21,7 @@ export default function PlaceValueWorld({ onGoHome }) {
   const [labTens, setLabTens] = useState(2)
   const [labOnes, setLabOnes] = useState(5)
   const [learner, setLearner] = useState(() => loadPvLearner())
+  useEffect(() => { markIslandVisit('placeValue') }, [])
 
   const questions = useMemo(() => generatePlaceValueSession(8), [sessionKey])
   const q = questions[idx]
