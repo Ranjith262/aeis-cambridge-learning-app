@@ -7,6 +7,7 @@ import { recordPvResult, pvMasteryPct, pvParentLine, loadPvLearner } from '../wo
 import Celebration from '../components/Celebration'
 import Mascot, { pickLine } from '../components/Mascot'
 import { markIslandVisit } from '../utils/islandUnlocks'
+import { recordAdaptiveResult } from '../world/adaptive/learnerModel'
 
 /**
  * Phase 1 vertical slice — Place Value Island
@@ -36,6 +37,7 @@ export default function PlaceValueWorld({ onGoHome }) {
       const ok = String(option) === String(q.correctAnswer)
       setAnswers((a) => ({ ...a, [q.id]: option }))
       const m = recordPvResult(q.skillId, ok)
+      recordAdaptiveResult(q.skillId, ok)
       setLearner({ ...m })
       if (ok) {
         setCelebrate(true)

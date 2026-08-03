@@ -4,6 +4,7 @@ import { generateEnglishSession } from '../world/english/englishGenerator'
 import Mascot, { pickLine } from '../components/Mascot'
 import Celebration from '../components/Celebration'
 import { markIslandVisit } from '../utils/islandUnlocks'
+import { recordAdaptiveResult } from '../world/adaptive/learnerModel'
 
 const SKILLS = [
   { id: 'all', emoji: '🌟', title: 'Mixed Adventure', blurb: 'A bit of everything' },
@@ -80,6 +81,7 @@ export default function EnglishWorld({ onGoHome }) {
       if (!q || answers[id] != null) return
       const ok = String(option).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase()
       setAnswers((a) => ({ ...a, [id]: option }))
+      recordAdaptiveResult(q.skillId, ok)
       if (ok) {
         setCelebrate(true)
         setTimeout(() => setCelebrate(false), 800)

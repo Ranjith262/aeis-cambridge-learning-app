@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Mascot, { pickLine } from '../../components/Mascot'
 import Celebration from '../../components/Celebration'
 import ShortAnswerInput from '../../components/ShortAnswerInput'
+import { recordAdaptiveResult } from '../adaptive/learnerModel'
 
 export default function IslandWorld({
   title,
@@ -42,6 +43,7 @@ export default function IslandWorld({
       const ok =
         String(option).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase()
       setAnswers((a) => ({ ...a, [id]: option }))
+      recordAdaptiveResult(q.skillId, ok)
       if (ok) {
         setCelebrate(true)
         setTimeout(() => setCelebrate(false), 850)

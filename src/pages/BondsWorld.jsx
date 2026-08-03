@@ -5,6 +5,7 @@ import { TenFrame } from '../components/manipulatives'
 import Mascot, { pickLine } from '../components/Mascot'
 import Celebration from '../components/Celebration'
 import ShortAnswerInput from '../components/ShortAnswerInput'
+import { recordAdaptiveResult } from '../world/adaptive/learnerModel'
 
 export default function BondsWorld({ onGoHome }) {
   const [phase, setPhase] = useState('intro')
@@ -19,6 +20,7 @@ export default function BondsWorld({ onGoHome }) {
     if (answers[id] != null) return
     const ok = String(val).trim() === String(q.correctAnswer).trim() || String(val) === String(q.correctAnswer)
     setAnswers((a) => ({ ...a, [id]: val }))
+    recordAdaptiveResult(q.skillId, ok)
     if (ok) {
       setCele(true)
       setTimeout(() => setCele(false), 800)

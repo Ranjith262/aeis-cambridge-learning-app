@@ -19,7 +19,7 @@ const PASTEL_ISLAND = [
   'bg-sky/30', 'bg-mint/40', 'bg-peach/40', 'bg-butter/50', 'bg-coral/30',
 ]
 
-export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds, onAddition, onSubtraction, onMoney, onTime, onOpenWorld, onEnglish }) {
+export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds, onAddition, onSubtraction, onMoney, onTime, onOpenWorld, onEnglish, onSmartQuest }) {
   const [activeSubject, setActiveSubject] = useState('math')
   const [profile, setProfile] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -169,6 +169,22 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
           <div className="text-[10px] text-ink/60">O'clock · half past</div>
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={onSmartQuest}
+        className="w-full mb-4 rounded-2xl p-4 text-left shadow-soft border-2 border-success/40"
+        style={{ background: 'linear-gradient(135deg, #E8F5E9, #FFF8E1)' }}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-4xl">🎯</span>
+          <div>
+            <div className="text-xs font-bold uppercase text-success">Phase 4 · Adaptive</div>
+            <div className="text-lg font-black text-ink">Smart Quest</div>
+            <div className="text-xs text-ink/70">Practises what needs love · interleaved</div>
+          </div>
+        </div>
+      </button>
 
       <button
         type="button"

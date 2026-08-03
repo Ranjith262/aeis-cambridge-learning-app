@@ -1,3 +1,4 @@
+import { adaptiveSummary } from '../world/adaptive/learnerModel'
 import { motion } from 'framer-motion'
 import { mathCategories } from '../data/mathQuestions'
 import {
