@@ -8,6 +8,11 @@ import {
   loadPrefs,
   savePrefs,
   applyPrefsToDocument,
+  exportProfileJson,
+  importProfileJson,
+  createProfile,
+  listProfiles,
+  switchProfile,
 } from '../utils/progress'
 import { useState } from 'react'
 
@@ -116,6 +121,65 @@ export default function ParentPage({ onGoHome }) {
               {label}
             </label>
           ))}
+        </div>
+      </div>
+
+      <div className="pastel-card p-4 mb-4 print:hidden">
+        <h2 className="font-bold text-ink mb-2">Profiles on this device</h2>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {listProfiles().map((pr) => (
+            <button
+              key={pr.id}
+              type="button"
+              onClick={() => { switchProfile(pr.id); window.location.reload() }}
+              className="pastel-btn px-3 py-1.5 bg-soft text-ink text-xs border border-black/5"
+            >
+              {pr.name}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              const n = window.prompt('Name for new profile', 'Learner')
+              if (n) { createProfile(n); window.location.reload() }
+            }}
+            className="pastel-btn px-3 py-1.5 bg-mint/50 text-ink text-xs"
+          >
+            + Add profile
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const blob = new Blob([exportProfileJson()], { type: 'application/json' })
+              const a = document.createElement('a')
+              a.href = URL.createObjectURL(blob)
+              a.download = 'aeis-progress.json'
+              a.click()
+            }}
+            className="pastel-btn px-3 py-2 bg-white border border-black/10 text-xs"
+          >
+            Export progress
+          </button>
+          <label className="pastel-btn px-3 py-2 bg-white border border-black/10 text-xs cursor-pointer">
+            Import progress
+            <input
+              type="file"
+              accept="application/json"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (!f) return
+                const reader = new FileReader()
+                reader.onload = () => {
+                  if (importProfileJson(String(reader.result))) window.location.reload()
+                  else alert('Could not import that file')
+                }
+                reader.readAsText(f)
+              }}
+            />
+          </label>
         </div>
       </div>
 

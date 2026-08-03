@@ -208,3 +208,42 @@ export function storyOfProgress() {
   if (mocks[0]) text += ` Latest mock score: ${mocks[0].scorePct}%.`
   return text
 }
+
+
+export function exportProfileJson() {
+  return JSON.stringify(loadProgress(), null, 2)
+}
+
+export function importProfileJson(jsonText) {
+  try {
+    const data = JSON.parse(jsonText)
+    if (!data.profiles) throw new Error('Invalid profile file')
+    saveProgress(data)
+    return true
+  } catch (e) {
+    console.warn(e)
+    return false
+  }
+}
+
+export function listProfiles() {
+  const data = loadProgress()
+  return Object.entries(data.profiles).map(([id, p]) => ({ id, name: p.name || id }))
+}
+
+export function switchProfile(id) {
+  const data = loadProgress()
+  if (!data.profiles[id]) return false
+  data.activeProfileId = id
+  saveProgress(data)
+  return true
+}
+
+export function createProfile(name) {
+  const data = loadProgress()
+  const id = 'p_' + Date.now()
+  data.profiles[id] = { ...defaultProfile(), name: name || 'Learner' }
+  data.activeProfileId = id
+  saveProgress(data)
+  return id
+}

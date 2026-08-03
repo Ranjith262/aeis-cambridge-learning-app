@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { mathCategories, getTotalMathQuestionCount } from '../data/mathQuestions'
 import { categories, getTotalQuestionCount } from '../data/questions'
 import Mascot, { pickLine } from '../components/Mascot'
+import MathKingdomMap from '../components/MathKingdomMap'
 import {
   getActiveProfile,
   getTopicMastery,
@@ -177,35 +178,26 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
         </button>
       </div>
 
-      <h2 className="text-lg font-bold text-ink mb-3">{isMath ? 'Explore the islands' : 'English topics'}</h2>
+      <h2 className="text-lg font-bold text-ink mb-3">{isMath ? 'Explore the Math Kingdom map' : 'English topics'}</h2>
+      {isMath ? (
+        <div className="mb-4">
+          <MathKingdomMap onSelectTopic={(id) => onStartQuiz(id, 'math')} onTeach={onTeach} />
+        </div>
+      ) : (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {currentCategories.map((cat, i) => {
-          const mastery = isMath ? getTopicMastery(cat.id) : null
           return (
             <div key={cat.id} className={`island-card pastel-card p-3 ${PASTEL_ISLAND[i % PASTEL_ISLAND.length]}`}>
-              <button type="button" onClick={() => onStartQuiz(cat.id, isMath ? 'math' : 'english')} className="w-full text-left">
+              <button type="button" onClick={() => onStartQuiz(cat.id, 'english')} className="w-full text-left">
                 <div className="text-2xl mb-1">{cat.icon}</div>
                 <div className="font-bold text-ink text-xs leading-snug">{cat.name}</div>
                 <div className="text-[10px] text-muted">{cat.count} q</div>
-                {mastery != null && (
-                  <div className="mt-1 h-1.5 rounded-full bg-white/70 overflow-hidden">
-                    <div className="h-full bg-success rounded-full" style={{ width: `${mastery}%` }} />
-                  </div>
-                )}
               </button>
-              {isMath && (
-                <button
-                  type="button"
-                  onClick={() => onTeach(cat.id)}
-                  className="mt-2 w-full text-[10px] font-semibold text-ink/70 hover:text-ink"
-                >
-                  Teach me first →
-                </button>
-              )}
             </div>
           )
         })}
       </div>
+      )}
 
       <div className="mt-6">
         <button
