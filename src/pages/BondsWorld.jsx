@@ -33,7 +33,7 @@ export default function BondsWorld({ onGoHome }) {
   }).length
 
   return (
-    <div className="min-h-screen overflow-x-hidden px-4 py-5 pb-20" style={{ background: 'linear-gradient(160deg,#F3E5F5,#E8F5E9,#FFF8E1)' }}>
+    <div className="min-h-screen overflow-x-clip px-4 py-5 pb-20" style={{ background: 'linear-gradient(160deg,#F3E5F5,#E8F5E9,#FFF8E1)' }}>
       <Celebration show={cele} seed={idx} />
       <div className="max-w-lg mx-auto">
         <button type="button" onClick={onGoHome} className="pastel-btn px-3 py-2 bg-white text-sm mb-4 border border-black/5">← Kingdom</button>

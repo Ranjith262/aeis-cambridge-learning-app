@@ -85,7 +85,7 @@ export default function MockExamPage({ onGoHome, onOpenWorld, onStartQuiz, onSma
   // —— Pre-exam temple ——
   if (!started) {
     return (
-      <div className="min-h-screen overflow-x-hidden bg-[#F7F5F0] px-4 py-8">
+      <div className="min-h-screen overflow-x-clip bg-[#F7F5F0] px-4 py-8">
         <div className="max-w-lg mx-auto">
           <button type="button" onClick={onGoHome} className="text-sm text-ink/60 mb-6">
             ← Kingdom
@@ -145,7 +145,7 @@ export default function MockExamPage({ onGoHome, onOpenWorld, onStartQuiz, onSma
     }[diag.readiness]
 
     return (
-      <div className="min-h-screen overflow-x-hidden bg-[#F7F5F0] px-4 py-8 pb-20">
+      <div className="min-h-screen overflow-x-clip bg-[#F7F5F0] px-4 py-8 pb-20">
         <div className="max-w-lg mx-auto">
           <h1 className="text-2xl font-black text-ink mb-1">Results</h1>
           <p className="text-sm text-ink/60 mb-4">Mock complete — here is your map forward</p>
@@ -230,7 +230,7 @@ export default function MockExamPage({ onGoHome, onOpenWorld, onStartQuiz, onSma
 
   // —— In-paper ——
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#F7F5F0] px-4 py-4 pb-28">
+    <div className="min-h-screen overflow-x-clip bg-[#F7F5F0] px-4 py-4 pb-28">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-3 sticky top-0 bg-[#F7F5F0]/95 py-2 z-20">
           <span className="text-xs font-bold uppercase tracking-wide text-ink/50">Mock · quiet mode</span>

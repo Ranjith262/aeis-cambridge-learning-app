@@ -24,7 +24,7 @@ export default function ReviewGardenPage({ onReviewTopic, onGoHome }) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative z-10 min-h-screen px-4 md:px-8 py-6 pb-16 max-w-3xl mx-auto overflow-x-hidden"
+      className="relative z-10 min-h-screen px-4 md:px-8 py-6 pb-16 max-w-3xl mx-auto overflow-x-clip"
     >
       <button type="button" onClick={onGoHome} className="pastel-btn px-4 py-2 bg-white shadow-card text-sm mb-4 border border-black/5">
         ← Kingdom

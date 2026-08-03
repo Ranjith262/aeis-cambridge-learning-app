@@ -42,7 +42,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden overscroll-none">
+    <div className="app-shell">
       <a href="#main-content" className="skip-link">Skip to content</a>
       <SoftBackground />
       <div id="main-content">

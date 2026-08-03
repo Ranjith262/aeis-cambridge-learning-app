@@ -59,7 +59,7 @@ export default function IslandWorld({
   ).length
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: gradient }}>
+    <div className="min-h-screen overflow-x-clip" style={{ background: gradient }}>
       <Celebration show={celebrate} seed={idx + correctCount} />
       <div className="max-w-lg mx-auto px-4 py-5 pb-20">
         <button type="button" onClick={onGoHome} className="pastel-btn px-3 py-2 bg-white/90 text-sm mb-4 border border-black/5">

@@ -108,7 +108,7 @@ export default function EnglishWorld({ onGoHome }) {
 
   return (
     <div
-      className="min-h-screen overflow-x-hidden"
+      className="min-h-screen overflow-x-clip"
       style={{ background: 'linear-gradient(165deg, #FCE4EC 0%, #E8EAF6 40%, #E0F7FA 100%)' }}
     >
       <Celebration show={celebrate} seed={idx + correctCount} />

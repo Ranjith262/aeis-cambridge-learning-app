@@ -56,7 +56,7 @@ export default function PlaceValueWorld({ onGoHome }) {
 
   return (
     <div
-      className="min-h-screen overflow-x-hidden"
+      className="min-h-screen overflow-x-clip"
       style={{
         background: 'linear-gradient(165deg, #FFF8E7 0%, #E3F2FD 40%, #E8F5E9 100%)',
       }}

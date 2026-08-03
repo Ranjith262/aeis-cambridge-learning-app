@@ -57,7 +57,7 @@ export default function SmartQuestPage({ onGoHome }) {
 
   return (
     <div
-      className="min-h-screen overflow-x-hidden"
+      className="min-h-screen overflow-x-clip"
       style={{ background: 'linear-gradient(165deg, #E8F5E9 0%, #FFF3E0 45%, #E3F2FD 100%)' }}
     >
       <Celebration show={celebrate} seed={idx + correctCount} />
