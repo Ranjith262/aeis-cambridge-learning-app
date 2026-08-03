@@ -19,7 +19,7 @@ const PASTEL_ISLAND = [
   'bg-sky/30', 'bg-mint/40', 'bg-peach/40', 'bg-butter/50', 'bg-coral/30',
 ]
 
-export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds, onAddition, onSubtraction, onMoney, onTime, onOpenWorld }) {
+export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds, onAddition, onSubtraction, onMoney, onTime, onOpenWorld, onEnglish }) {
   const [activeSubject, setActiveSubject] = useState('math')
   const [profile, setProfile] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -169,6 +169,22 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
           <div className="text-[10px] text-ink/60">O'clock · half past</div>
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={onEnglish}
+        className="w-full mb-6 rounded-2xl p-5 text-left shadow-soft border-2 border-pink-200 overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #FCE4EC 0%, #E8EAF6 50%, #E0F7FA 100%)' }}
+      >
+        <div className="flex items-center gap-4">
+          <span className="text-5xl">🦊</span>
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wide text-purple-500">Phase 3 · English</div>
+            <div className="text-xl font-black text-ink">Word Harbour</div>
+            <div className="text-sm text-ink/70">Vocab · Sentences · Stories · Sounds · Patterns</div>
+          </div>
+        </div>
+      </button>
 
       {/* Main action hub */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">

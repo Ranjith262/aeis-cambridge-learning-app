@@ -14,6 +14,7 @@ import AdditionWorld from './pages/AdditionWorld'
 import SubtractionWorld from './pages/SubtractionWorld'
 import MoneyWorld from './pages/MoneyWorld'
 import TimeWorld from './pages/TimeWorld'
+import EnglishWorld from './pages/EnglishWorld'
 
 export default function App() {
   const [page, setPage] = useState('home')
@@ -59,6 +60,7 @@ export default function App() {
             onMoney={() => setPage('money')}
             onTime={() => setPage('time')}
             onOpenWorld={(w) => setPage(w)}
+            onEnglish={() => setPage('english')}
           />
         )}
         {page === 'quiz' && (
@@ -94,6 +96,7 @@ export default function App() {
         {page === 'subtraction' && <SubtractionWorld key="sub" onGoHome={goHome} />}
         {page === 'money' && <MoneyWorld key="money" onGoHome={goHome} />}
         {page === 'time' && <TimeWorld key="time" onGoHome={goHome} />}
+        {page === 'english' && <EnglishWorld key="en" onGoHome={goHome} />}
       </AnimatePresence>
     </div>
   )
