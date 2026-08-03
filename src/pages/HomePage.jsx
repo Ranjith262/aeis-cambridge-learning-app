@@ -19,7 +19,7 @@ const PASTEL_ISLAND = [
   'bg-sky/30', 'bg-mint/40', 'bg-peach/40', 'bg-butter/50', 'bg-coral/30',
 ]
 
-export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue }) {
+export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds }) {
   const [activeSubject, setActiveSubject] = useState('math')
   const [profile, setProfile] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -129,9 +129,19 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
         <div className="relative z-10 flex items-center gap-4">
           <span className="text-5xl">🏰</span>
           <div>
-            <div className="text-xs font-bold uppercase tracking-wide text-success">Featured world</div>
+            <div className="text-xs font-bold uppercase tracking-wide text-success">Featured worlds</div>
             <div className="text-xl font-black text-ink">Place Value Island</div>
             <div className="text-sm text-ink/70">Story · Building lab · Fresh questions · Parent tip</div>
+          </div>
+        </div>
+      </button>
+      <button type="button" onClick={onBonds} className="w-full mb-6 rounded-2xl p-4 text-left shadow-soft border-2 border-peach/50" style={{ background: 'linear-gradient(135deg,#F3E5F5,#FFF3E0)' }}>
+        <div className="flex items-center gap-3">
+          <span className="text-4xl">🔗</span>
+          <div>
+            <div className="text-xs font-bold text-muted uppercase">Phase 2 island</div>
+            <div className="font-black text-ink">Number Bonds Island</div>
+            <div className="text-xs text-ink/70">Friends of 10 & 20 · ten-frame practice</div>
           </div>
         </div>
       </button>
