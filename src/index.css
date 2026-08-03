@@ -2,115 +2,122 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+:root {
+  --bg-page: #FFF8F0;
+  --bg-soft: #F0F7F4;
+  --bg-card: #FFFFFF;
+  --accent-mint: #A8E6CF;
+  --accent-peach: #FFD3B6;
+  --accent-sky: #A0D2EB;
+  --accent-butter: #FFF5BA;
+  --accent-coral: #FFAAA5;
+  --text-primary: #2D3436;
+  --text-secondary: #636E72;
+  --text-muted: #B2BEC3;
+  --success: #00B894;
+  --warning: #FDCB6E;
+  --shadow-soft: 0 8px 30px rgba(45, 52, 54, 0.08);
+  --radius-card: 1.25rem;
 }
 
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+html, body, #root {
+  min-height: 100%;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(3deg); }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
 }
 
-@keyframes floatSlow {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.3); }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulse-ring {
-  0% { transform: scale(0.8); opacity: 1; }
-  100% { transform: scale(1.4); opacity: 0; }
-}
-
-.animated-gradient-bg {
-  background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a3e);
-  background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
+.pastel-page {
   min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(168, 230, 207, 0.45), transparent 50%),
+    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(255, 211, 182, 0.4), transparent 45%),
+    radial-gradient(ellipse 60% 40% at 50% 90%, rgba(160, 210, 235, 0.35), transparent 50%),
+    var(--bg-page);
 }
 
-.floating-shape {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.1;
-  animation: floatSlow 6s ease-in-out infinite;
+.pastel-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-.star {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: white;
-  border-radius: 50%;
-  animation: twinkle 3s ease-in-out infinite;
+.pastel-btn {
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.pastel-btn:active {
+  transform: scale(0.97);
 }
 
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.island-card {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
 }
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+.island-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(45, 52, 54, 0.12);
 }
 
 .option-btn {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .option-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
-.category-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.float-gentle {
+  animation: floatGentle 3.5s ease-in-out infinite;
 }
 
-.category-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+@keyframes bounceIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.bounce-in {
+  animation: bounceIn 0.45s ease-out forwards;
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+[data-contrast="high"] {
+  --text-primary: #000;
+  --text-secondary: #222;
+  --bg-page: #fff;
+  --bg-card: #fff;
 }
-
-.glass-white {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+[data-text="lg"] body {
+  font-size: 1.1rem;
+}
+[data-font="dyslexia"] body {
+  font-family: "Comic Sans MS", "OpenDyslexic", system-ui, sans-serif;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  background: rgba(45, 52, 54, 0.15);
+  border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(45, 52, 54, 0.25);
 }

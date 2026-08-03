@@ -1,123 +1,222 @@
-import { useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { categories, getTotalQuestionCount } from '../data/questions'
 import { mathCategories, getTotalMathQuestionCount } from '../data/mathQuestions'
+import { categories, getTotalQuestionCount } from '../data/questions'
+import Mascot, { pickLine } from '../components/Mascot'
+import { getActiveProfile, getTopicMastery, loadPrefs, savePrefs, applyPrefsToDocument } from '../utils/progress'
+
+const PASTEL_ISLAND = [
+  { bg: 'bg-sky/40' },
+  { bg: 'bg-mint/50' },
+  { bg: 'bg-peach/50' },
+  { bg: 'bg-butter/60' },
+  { bg: 'bg-coral/40' },
+  { bg: 'bg-sky/30' },
+  { bg: 'bg-mint/40' },
+  { bg: 'bg-peach/40' },
+  { bg: 'bg-butter/50' },
+  { bg: 'bg-coral/30' },
+]
 
 export default function HomePage({ onStartQuiz }) {
-  const [activeSubject, setActiveSubject] = useState('english')
+  const [activeSubject, setActiveSubject] = useState('math')
+  const [profile, setProfile] = useState(null)
+  const [showSettings, setShowSettings] = useState(false)
+  const [prefs, setPrefs] = useState(() => loadPrefs())
 
-  const isEnglish = activeSubject === 'english'
-  const currentCategories = isEnglish ? categories : mathCategories
-  const currentTotal = isEnglish ? getTotalQuestionCount() : getTotalMathQuestionCount()
+  useEffect(() => {
+    setProfile(getActiveProfile())
+    applyPrefsToDocument(loadPrefs())
+  }, [])
+
+  useEffect(() => {
+    applyPrefsToDocument(prefs)
+    savePrefs(prefs)
+  }, [prefs])
+
+  const isMath = activeSubject === 'math'
+  const currentCategories = isMath ? mathCategories : categories
+  const currentTotal = isMath ? getTotalMathQuestionCount() : getTotalQuestionCount()
+
+  const weakTopic = useMemo(() => {
+    if (!profile?.weakSkills?.length) return null
+    const id = profile.weakSkills[profile.weakSkills.length - 1]
+    return currentCategories.find((c) => c.id === id) || null
+  }, [profile, currentCategories])
+
+  const overallPct =
+    profile && profile.totalAttempted > 0
+      ? Math.round((profile.totalCorrect / profile.totalAttempted) * 100)
+      : null
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4 }}
-      className="relative z-10 min-h-screen px-4 md:px-8 lg:px-16 py-8"
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.35 }}
+      className="relative z-10 min-h-screen px-4 md:px-8 lg:px-12 py-6 pb-16"
     >
-      {/* Hero Section */}
-      <div className="text-center mb-8">
-        <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-          className="text-6xl mb-4"
-        >
-          🎓
-        </motion.div>
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-          AEIS Practice
-        </h1>
-        <p className="text-purple-200 text-lg mb-6">
-          Cambridge Primary 1 · Singapore MOE Aligned
-        </p>
-
-        {/* Stats bar */}
-        <div className="flex justify-center gap-6 mb-8">
-          <div className="glass rounded-2xl px-5 py-3 text-center">
-            <div className="text-2xl font-bold text-white">{currentTotal}+</div>
-            <div className="text-purple-300 text-xs">Questions</div>
-          </div>
-          <div className="glass rounded-2xl px-5 py-3 text-center">
-            <div className="text-2xl font-bold text-white">{currentCategories.length}</div>
-            <div className="text-purple-300 text-xs">Topics</div>
-          </div>
-          <div className="glass rounded-2xl px-5 py-3 text-center">
-            <div className="text-2xl font-bold text-white">P1</div>
-            <div className="text-purple-300 text-xs">Level</div>
-          </div>
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <p className="text-sm font-semibold text-muted uppercase tracking-wide">AEIS Primary · Math Ready</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-ink mt-1">Math Kingdom</h1>
+          <p className="text-muted mt-1 text-sm md:text-base">
+            Cambridge P1 aligned · Soft practice for AEIS P2 entrance
+          </p>
         </div>
-
-        {/* Subject Tabs */}
-        <div className="flex justify-center gap-3 mb-6">
-          <button
-            onClick={() => setActiveSubject('english')}
-            className={`px-6 py-3 rounded-full font-semibold text-sm transition-all ${
-              isEnglish
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                : 'glass text-white/60 hover:text-white'
-            }`}
-          >
-            📖 English
-          </button>
-          <button
-            onClick={() => setActiveSubject('math')}
-            className={`px-6 py-3 rounded-full font-semibold text-sm transition-all ${
-              !isEnglish
-                ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-lg'
-                : 'glass text-white/60 hover:text-white'
-            }`}
-          >
-            🧮 Maths
-          </button>
-        </div>
-
-        {/* Start All Button */}
         <button
-          onClick={() => onStartQuiz('all', activeSubject)}
-          className={`px-8 py-4 rounded-full font-bold text-white text-base shadow-xl hover:scale-105 transition-transform ${
-            isEnglish
-              ? 'bg-gradient-to-r from-orange-400 to-pink-500'
-              : 'bg-gradient-to-r from-green-400 to-teal-500'
-          }`}
+          type="button"
+          onClick={() => setShowSettings((s) => !s)}
+          className="pastel-btn px-4 py-2 bg-white shadow-card text-ink text-sm border border-black/5"
+          aria-label="Settings"
         >
-          🚀 Start All {currentTotal} Questions
+          Settings
         </button>
       </div>
 
-      {/* Category Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto">
-        {currentCategories.map((cat, idx) => (
-          <motion.button
-            key={cat.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 * idx, duration: 0.3 }}
-            onClick={() => onStartQuiz(cat.id, activeSubject)}
-            className="category-card glass rounded-2xl p-5 text-left group"
-          >
-            {/* Icon */}
-            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-2xl mb-3`}>
-              {cat.icon}
-            </div>
-            {/* Info */}
-            <h3 className="text-white font-bold text-base mb-1">{cat.name}</h3>
-            <p className="text-purple-300 text-sm mb-3">{cat.count} questions</p>
-            {/* CTA */}
-            <div className="flex items-center gap-1 text-purple-300 text-sm group-hover:text-white transition-colors">
-              <span>Start Practice</span>
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </div>
-          </motion.button>
-        ))}
+      {showSettings && (
+        <div className="pastel-card p-4 mb-6 max-w-md">
+          <h3 className="font-bold text-ink mb-3">Accessibility</h3>
+          <div className="space-y-3 text-sm">
+            {[
+              ['highContrast', 'High contrast'],
+              ['reducedMotion', 'Reduced motion'],
+              ['dyslexiaFont', 'Dyslexia-friendly font'],
+            ].map(([key, label]) => (
+              <label key={key} className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!prefs[key]}
+                  onChange={(e) => setPrefs((p) => ({ ...p, [key]: e.target.checked }))}
+                  className="w-4 h-4"
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+            <label className="flex items-center gap-3">
+              <span className="w-28">Text size</span>
+              <select
+                value={prefs.textScale}
+                onChange={(e) => setPrefs((p) => ({ ...p, textScale: e.target.value }))}
+                className="rounded-lg border border-black/10 px-2 py-1"
+              >
+                <option value="sm">Small</option>
+                <option value="md">Medium</option>
+                <option value="lg">Large</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
+        <Mascot mood="happy" size="lg" message={pickLine('welcome', profile?.totalAttempted || 0)} />
+        <div className="flex flex-wrap gap-3">
+          <div className="pastel-card px-4 py-3 text-center min-w-[88px]">
+            <div className="text-xl font-bold text-ink">{currentTotal}+</div>
+            <div className="text-xs text-muted">Questions</div>
+          </div>
+          <div className="pastel-card px-4 py-3 text-center min-w-[88px]">
+            <div className="text-xl font-bold text-ink">{currentCategories.length}</div>
+            <div className="text-xs text-muted">Islands</div>
+          </div>
+          <div className="pastel-card px-4 py-3 text-center min-w-[88px]">
+            <div className="text-xl font-bold text-success">{overallPct != null ? `${overallPct}%` : '—'}</div>
+            <div className="text-xs text-muted">Accuracy</div>
+          </div>
+          <div className="pastel-card px-4 py-3 text-center min-w-[88px]">
+            <div className="text-xl font-bold text-ink">{profile?.streak || 0}</div>
+            <div className="text-xs text-muted">Streak</div>
+          </div>
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="text-center mt-12 text-purple-300/60 text-sm">
-        Made with 💜 for young learners preparing for AEIS
+      {weakTopic && isMath && (
+        <button
+          type="button"
+          onClick={() => onStartQuiz(weakTopic.id, 'math')}
+          className="w-full md:w-auto mb-6 pastel-card px-5 py-4 flex items-center gap-4 text-left hover:shadow-soft transition-shadow border-2 border-mint/60"
+        >
+          <span className="text-3xl">🎯</span>
+          <div>
+            <div className="text-xs font-semibold text-success uppercase tracking-wide">Today&apos;s Quest</div>
+            <div className="font-bold text-ink">Practise {weakTopic.name}</div>
+            <div className="text-sm text-muted">A topic that needs a little extra love</div>
+          </div>
+        </button>
+      )}
+
+      <div className="flex gap-2 mb-5">
+        <button
+          type="button"
+          onClick={() => setActiveSubject('math')}
+          className={`pastel-btn px-5 py-2.5 text-sm ${
+            isMath ? 'bg-ink text-white shadow-card' : 'bg-white text-ink border border-black/5'
+          }`}
+        >
+          Math Kingdom
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveSubject('english')}
+          className={`pastel-btn px-5 py-2.5 text-sm ${
+            !isMath ? 'bg-ink text-white shadow-card' : 'bg-white text-ink border border-black/5'
+          }`}
+        >
+          English (bonus)
+        </button>
       </div>
+
+      <h2 className="text-lg font-bold text-ink mb-3">
+        {isMath ? 'Explore the islands' : 'English topics'}
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+        {currentCategories.map((cat, i) => {
+          const mastery = isMath ? getTopicMastery(cat.id) : null
+          const style = PASTEL_ISLAND[i % PASTEL_ISLAND.length]
+          return (
+            <motion.button
+              key={cat.id}
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onStartQuiz(cat.id, isMath ? 'math' : 'english')}
+              className={`island-card pastel-card p-4 text-left ${style.bg} ${
+                mastery != null && mastery >= 80 ? 'ring-2 ring-success/50' : ''
+              }`}
+            >
+              <div className="text-3xl mb-2">{cat.icon}</div>
+              <div className="font-bold text-ink text-sm leading-snug">{cat.name}</div>
+              <div className="text-xs text-muted mt-1">{cat.count} questions</div>
+              {mastery != null && (
+                <div className="mt-2">
+                  <div className="h-1.5 rounded-full bg-white/70 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-success transition-all"
+                      style={{ width: `${mastery}%` }}
+                    />
+                  </div>
+                  <div className="text-[10px] text-muted mt-0.5">{mastery}% mastery</div>
+                </div>
+              )}
+            </motion.button>
+          )
+        })}
+      </div>
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => onStartQuiz('all', isMath ? 'math' : 'english')}
+          className="pastel-btn px-6 py-3 bg-ink text-white shadow-soft text-sm"
+        >
+          Mixed practice (all topics)
+        </button>
+      </div>
+
+      <p className="mt-10 text-center text-xs text-muted">
+        Progress is saved on this device · Soft pastel practice for AEIS P2 Math
+      </p>
     </motion.div>
   )
 }

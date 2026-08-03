@@ -1,35 +1,36 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Mascot, { pickLine } from './Mascot'
 
-const CIRCUMFERENCE = 2 * Math.PI * 60 // r=60
+const CIRCUMFERENCE = 2 * Math.PI * 60
 
-function getEmoji(pct) {
-  if (pct >= 80) return '🌟'
-  if (pct >= 60) return '👍'
-  return '💪'
+function getRingColor(pct) {
+  if (pct >= 80) return '#00B894'
+  if (pct >= 50) return '#FDCB6E'
+  return '#FFAAA5'
 }
 
 function getMessage(pct) {
-  if (pct >= 80) return 'Amazing work! You are a star! 🌟'
-  if (pct >= 60) return 'Good job! Keep practising! 📚'
-  return 'Keep trying! You can do it! 💪'
+  if (pct >= 90) return 'Outstanding! You are Math Kingdom ready!'
+  if (pct >= 70) return 'Great work — keep building your strength!'
+  if (pct >= 50) return 'Solid effort. Practice makes progress!'
+  return 'Every try counts. Come back and grow stronger!'
 }
 
-function getRingColor(pct) {
-  if (pct >= 80) return '#10B981'  // green
-  if (pct >= 60) return '#F59E0B'  // amber
-  return '#EF4444'                  // red
-}
-
-export default function ScoreModal({ correctCount, totalAnswered, totalQuestions, onTryAgain, onGoHome }) {
+export default function ScoreModal({
+  correctCount,
+  totalAnswered,
+  totalQuestions,
+  onTryAgain,
+  onGoHome,
+}) {
+  const pct = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0
   const [animatedOffset, setAnimatedOffset] = useState(CIRCUMFERENCE)
 
-  const pct = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0
-
   useEffect(() => {
-    const target = CIRCUMFERENCE - (pct / 100) * CIRCUMFERENCE
-    const timer = setTimeout(() => setAnimatedOffset(target), 100)
-    return () => clearTimeout(timer)
+    const offset = CIRCUMFERENCE - (pct / 100) * CIRCUMFERENCE
+    const t = setTimeout(() => setAnimatedOffset(offset), 100)
+    return () => clearTimeout(t)
   }, [pct])
 
   return (
@@ -38,41 +39,28 @@ export default function ScoreModal({ correctCount, totalAnswered, totalQuestions
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-        onClick={(e) => e.target === e.currentTarget && onGoHome()}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/30 backdrop-blur-sm"
+        onClick={onGoHome}
       >
         <motion.div
-          initial={{ scale: 0.8, opacity: 0, y: 40 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="glass-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 280 }}
+          className="pastel-card p-6 w-full max-w-sm text-center"
+          onClick={(e) => e.stopPropagation()}
         >
-          {/* Animated emoji */}
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
-            className="text-5xl mb-3"
-          >
-            {getEmoji(pct)}
-          </motion.div>
+          <Mascot
+            mood={pct >= 70 ? 'celebrate' : 'encourage'}
+            size="md"
+            message={pickLine('complete', correctCount)}
+            className="justify-center mb-4"
+          />
 
-          <h2 className="text-2xl font-bold text-gray-800 mb-5">Your Score</h2>
+          <h2 className="text-2xl font-bold text-ink mb-4">Your Score</h2>
 
-          {/* SVG Ring */}
           <div className="flex justify-center mb-4">
             <svg width="144" height="144" viewBox="0 0 144 144">
-              {/* Track */}
-              <circle
-                cx="72"
-                cy="72"
-                r="60"
-                fill="none"
-                stroke="#e5e7eb"
-                strokeWidth="10"
-              />
-              {/* Progress */}
+              <circle cx="72" cy="72" r="60" fill="none" stroke="#E8F5F0" strokeWidth="10" />
               <circle
                 cx="72"
                 cy="72"
@@ -86,35 +74,34 @@ export default function ScoreModal({ correctCount, totalAnswered, totalQuestions
                 transform="rotate(-90 72 72)"
                 style={{ transition: 'stroke-dashoffset 1s ease-out' }}
               />
-              {/* Score text */}
               <text x="72" y="67" textAnchor="middle" fill={getRingColor(pct)} fontSize="22" fontWeight="bold">
                 {correctCount}/{totalAnswered}
               </text>
-              <text x="72" y="88" textAnchor="middle" fill="#6b7280" fontSize="14">
+              <text x="72" y="88" textAnchor="middle" fill="#636E72" fontSize="14">
                 {pct}%
               </text>
             </svg>
           </div>
 
-          {/* Message */}
-          <p className="text-gray-600 text-base mb-2 font-medium">{getMessage(pct)}</p>
-          <p className="text-gray-400 text-sm mb-6">
+          <p className="text-ink text-base mb-1 font-medium">{getMessage(pct)}</p>
+          <p className="text-muted text-sm mb-6">
             {totalAnswered} of {totalQuestions} questions answered
           </p>
 
-          {/* Buttons */}
           <div className="flex gap-3">
             <button
+              type="button"
               onClick={onTryAgain}
-              className="flex-1 py-3 px-4 rounded-2xl bg-indigo-500 text-white font-semibold text-sm hover:bg-indigo-600 transition-colors"
+              className="flex-1 py-3 pastel-btn bg-ink text-white font-semibold text-sm"
             >
-              🔄 Try Again
+              Try again
             </button>
             <button
+              type="button"
               onClick={onGoHome}
-              className="flex-1 py-3 px-4 rounded-2xl bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200 transition-colors"
+              className="flex-1 py-3 pastel-btn bg-soft text-ink font-semibold text-sm border border-black/5"
             >
-              🏠 Back to Topics
+              Back to Kingdom
             </button>
           </div>
         </motion.div>
