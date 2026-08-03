@@ -22,6 +22,7 @@ export default function ParentPage({ onGoHome }) {
   const readiness = readinessScore()
   const story = storyOfProgress()
   const [prefs, setPrefs] = useState(() => loadPrefs())
+  const adaptive = adaptiveSummary()
 
   const updatePref = (key, value) => {
     const next = { ...prefs, [key]: value }
@@ -66,6 +67,20 @@ export default function ParentPage({ onGoHome }) {
       <div className="pastel-card p-4 mb-6">
         <h2 className="font-bold text-ink mb-2">Story of progress</h2>
         <p className="text-sm text-ink leading-relaxed">{story}</p>
+      </div>
+
+      <div className="pastel-card p-4 mb-6 border-2 border-success/30">
+        <h2 className="font-bold text-ink mb-2">Adaptive coach (Phase 4)</h2>
+        <p className="text-sm text-ink leading-relaxed">{adaptive.parentLine}</p>
+        {adaptive.overall != null && (
+          <p className="text-xs text-muted mt-2">Adaptive accuracy ~{adaptive.overall}% · sessions {adaptive.sessions}</p>
+        )}
+        {adaptive.fragile?.length > 0 && (
+          <p className="text-xs text-ink/70 mt-1">Fragile skills: {adaptive.fragile.slice(0, 6).join(', ')}</p>
+        )}
+        {adaptive.tired && (
+          <p className="text-xs text-coral mt-1 font-semibold">Heavy practice today — a break helps memory.</p>
+        )}
       </div>
 
       <h2 className="font-bold text-ink mb-2">Mastery heat-map</h2>

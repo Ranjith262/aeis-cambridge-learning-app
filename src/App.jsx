@@ -43,7 +43,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen relative overflow-x-hidden overscroll-none">
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <SoftBackground />
+      <div id="main-content">
       <AnimatePresence mode="wait">
         {page === 'home' && (
           <HomePage
@@ -109,6 +111,7 @@ export default function App() {
         {page === 'english' && <EnglishWorld key="en" onGoHome={goHome} />}
         {page === 'smart' && <SmartQuestPage key="smart" onGoHome={goHome} />}
       </AnimatePresence>
+      </div>
     </div>
   )
 }

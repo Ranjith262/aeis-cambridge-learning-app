@@ -155,3 +155,40 @@ body {
   background: rgba(45, 52, 54, 0.15);
   border-radius: 4px;
 }
+
+/* Phase 6 — accessibility focus */
+:focus-visible {
+  outline: 3px solid #2D3436;
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: #2D3436;
+  color: #fff;
+  border-radius: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+@media print {
+  .print\:hidden,
+  button,
+  .skip-link {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+}

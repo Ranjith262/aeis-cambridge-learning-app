@@ -1,36 +1,35 @@
-# AEIS Cambridge Learning App — Math Kingdom
+# AEIS Learning World
 
-Soft pastel practice app for **AEIS Primary 2 entrance Mathematics** (Primary 1 MOE-aligned topics).
+Learning platform for **ages 7–8** preparing for **AEIS P2 entrance** (math focus + English harbour).
 
-## What's new (modernisation)
+Built in six phases per the Product Bible (`docs/phase0/PRODUCT_BIBLE.md`).
 
-- **Soft pastel visual system** — calm cream / mint / peach / sky (no dark glassmorphism)
-- **Math Kingdom home** — topic islands with mastery bars
-- **Captain Number mascot** — growth-mindset feedback
-- **Local progress** — accuracy, streak, weak topics saved on device (`localStorage`)
-- **Today's Quest** — quick practise of a weak topic
-- **Accessibility settings** — high contrast, reduced motion, text size, dyslexia-friendly font
-- Math-first navigation (English remains available as bonus)
-
-## Run locally
+## Run
 
 ```bash
 npm install --legacy-peer-deps
 npm run dev
 ```
 
-## Scripts
+```bash
+npm test
+npm run build
+```
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Dev server |
-| `npm run build` | Production build |
-| `npm test` | Vitest unit tests |
+## Worlds & modes
 
-## Stack
+| Area | What |
+|------|------|
+| **Place Value Island** | Cinema + 3D-like blocks + lab + generator |
+| **Bonds / Addition / Subtraction / Money / Time** | Story → lab → infinite practice |
+| **Word Harbour** | English: vocab, sentences, reading, phonics, grammar notice |
+| **Smart Quest** | Adaptive interleaved practice |
+| **Mock Exam Hall** | 29 MCQ + 17 SA, diagnostics → islands |
+| **Review Garden** | Spaced review ritual |
+| **Parent dashboard** | Mastery, adaptive coach, a11y, profiles, export |
 
-React 19 · Vite · Tailwind CSS · Framer Motion · Vitest
+Progress is **local-first** (this device). Optional multi-profile + import/export.
 
-## Deploy
+## Docs
 
-Configured for Vercel (`vercel.json`). Push to `main` to deploy if GitHub integration is enabled.
+- `docs/phase0` … `docs/phase6` — gates and standards
