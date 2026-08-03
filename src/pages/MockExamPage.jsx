@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { shuffleQuestions } from '../utils/shuffle'
-import { allMathQuestions, mathCategories } from '../data/mathQuestions'
+import { mathCategories } from '../data/mathQuestions'
+import { generateQuestions } from '../utils/dynamicQuestions'
 import { recordMock } from '../utils/progress'
-import { toShortAnswer } from '../utils/shortAnswer'
 import Mascot, { pickLine } from '../components/Mascot'
 import ShortAnswerInput from '../components/ShortAnswerInput'
 
@@ -13,46 +13,26 @@ const SA_COUNT = 17
 const TIME_LIMIT_SEC = 30 * 60 // 30 min for combined paper feel
 
 function buildPaper() {
-  const byCat = {}
-  allMathQuestions.forEach((q) => {
-    if (!byCat[q.category]) byCat[q.category] = []
-    byCat[q.category].push({ ...q })
-  })
-  const cats = Object.keys(byCat)
-  const pickAcross = (n, preferNumericSa = false) => {
-    const picks = []
-    let i = 0
-    const pool = cats.map((c) => [...(byCat[c] || [])])
-    while (picks.length < n) {
-      let found = false
-      for (let t = 0; t < cats.length && picks.length < n; t++) {
-        const idx = (i + t) % cats.length
-        const arr = pool[idx]
-        if (!arr.length) continue
-        // prefer items with numeric answers for SA
-        let qIdx = 0
-        if (preferNumericSa) {
-          const ni = arr.findIndex((q) => /^\$?\d+/.test(String(q.correctAnswer)))
-          qIdx = ni >= 0 ? ni : 0
-        }
-        const [q] = arr.splice(qIdx, 1)
-        picks.push(q)
-        found = true
+  // Always generate fresh items — never reuse a fixed paper
+  const mcq = generateQuestions('all', MCQ_COUNT * 2)
+    .filter((q) => q.format !== 'short_answer')
+    .slice(0, MCQ_COUNT)
+    .map((q) => ({ ...q, format: 'mcq' }))
+  const sa = generateQuestions('all', SA_COUNT * 2)
+    .map((q) => {
+      if (q.format === 'short_answer') return q
+      // force short-answer style for part 2
+      return {
+        ...q,
+        id: `sa_${q.id}`,
+        format: 'short_answer',
+        options: undefined,
+        question: q.question.replace(/\?$/, '').includes('=')
+          ? q.question
+          : q.question,
       }
-      if (!found) break
-      i++
-    }
-    return picks
-  }
-
-  const mcq = pickAcross(MCQ_COUNT, false).map((q) => ({ ...q, format: 'mcq' }))
-  const saRaw = pickAcross(SA_COUNT, true)
-  const sa = saRaw.map((q) => {
-    const converted = toShortAnswer(q)
-    return converted || { ...q, format: 'short_answer', id: `sa_${q.id}`, options: undefined }
-  })
-
-  // Part 1 MCQ then Part 2 SA (still shuffle within parts for non-fixed order)
+    })
+    .slice(0, SA_COUNT)
   return [...shuffleQuestions(mcq), ...shuffleQuestions(sa)]
 }
 

@@ -1,91 +1,94 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { shuffleQuestions } from '../utils/shuffle'
 import { categories, allQuestions, getQuestionsByCategory } from '../data/questions'
-import { mathCategories, allMathQuestions, getMathQuestionsByCategory } from '../data/mathQuestions'
+import { mathCategories } from '../data/mathQuestions'
+import { generateQuestions } from '../utils/dynamicQuestions'
 import QuestionCard from '../components/QuestionCard'
 import ScoreModal from '../components/ScoreModal'
 import Mascot, { pickLine } from '../components/Mascot'
+import Celebration from '../components/Celebration'
 import { recordSession } from '../utils/progress'
-import { mixShortAnswers } from '../utils/shortAnswer'
 
-const QUESTIONS_PER_PAGE = 8
+const SESSION_SIZE = 10
 
 function getCategoryMeta(categoryId, subject) {
   if (subject === 'math') {
-    return (
-      mathCategories.find((c) => c.id === categoryId) || {
-        name: 'All Maths',
-        icon: '🧮',
-      }
-    )
+    return mathCategories.find((c) => c.id === categoryId) || { name: 'Mixed Math Adventure', icon: '🧮' }
   }
-  return (
-    categories.find((c) => c.id === categoryId) || {
-      name: 'All English',
-      icon: '📖',
-    }
-  )
+  return categories.find((c) => c.id === categoryId) || { name: 'All English', icon: '📖' }
 }
 
 export default function QuizPage({ categoryId, subject, onGoHome, onTeach }) {
+  const [sessionKey, setSessionKey] = useState(0)
   const [answers, setAnswers] = useState({})
   const [currentPage, setCurrentPage] = useState(0)
   const [showScore, setShowScore] = useState(false)
   const [sessionRecorded, setSessionRecorded] = useState(false)
+  const [celebrate, setCelebrate] = useState(false)
+  const [combo, setCombo] = useState(0)
 
+  // Fresh dynamic questions every session for math — never a fixed bank order
   const shuffledQuestions = useMemo(() => {
-    let qs
-    if (categoryId === 'all') {
-      qs = subject === 'math' ? allMathQuestions : allQuestions
-    } else {
-      qs =
-        subject === 'math'
-          ? getMathQuestionsByCategory(categoryId)
-          : getQuestionsByCategory(categoryId).map((q) => ({ ...q, category: categoryId }))
+    if (subject === 'math') {
+      return generateQuestions(categoryId === 'all' ? 'all' : categoryId, SESSION_SIZE)
     }
-    const shuffled = shuffleQuestions(qs)
-    return subject === 'math' ? mixShortAnswers(shuffled, 0.15) : shuffled
-  }, [categoryId, subject])
+    let qs =
+      categoryId === 'all'
+        ? allQuestions
+        : getQuestionsByCategory(categoryId).map((q) => ({ ...q, category: categoryId }))
+    return shuffleQuestions(qs).slice(0, SESSION_SIZE)
+  }, [categoryId, subject, sessionKey])
 
-  const totalPages = Math.max(1, Math.ceil(shuffledQuestions.length / QUESTIONS_PER_PAGE))
-  const pageQuestions = shuffledQuestions.slice(
-    currentPage * QUESTIONS_PER_PAGE,
-    (currentPage + 1) * QUESTIONS_PER_PAGE
-  )
+  const totalPages = Math.max(1, Math.ceil(shuffledQuestions.length / SESSION_SIZE))
+  const pageQuestions = shuffledQuestions
 
   const correctCount = useMemo(
     () =>
       Object.entries(answers).reduce((count, [qId, selected]) => {
         const q = shuffledQuestions.find((item) => item.id === qId)
-        return count + (q && selected === q.correctAnswer ? 1 : 0)
+        if (!q) return count
+        const ok =
+          String(selected).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase()
+        return count + (ok ? 1 : 0)
       }, 0),
     [answers, shuffledQuestions]
   )
 
   const totalAnswered = Object.keys(answers).length
   const progress =
-    shuffledQuestions.length > 0
-      ? Math.round((totalAnswered / shuffledQuestions.length) * 100)
-      : 0
+    shuffledQuestions.length > 0 ? Math.round((totalAnswered / shuffledQuestions.length) * 100) : 0
 
   const catMeta = getCategoryMeta(categoryId, subject)
 
-  const handleSelect = useCallback((questionId, option) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: option }))
-  }, [])
-
-  const handlePageChange = (page) => {
-    if (page < 0 || page >= totalPages) return
-    setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  const handleSelect = useCallback(
+    (questionId, option) => {
+      setAnswers((prev) => {
+        if (prev[questionId] != null) return prev
+        const q = shuffledQuestions.find((item) => item.id === questionId)
+        const ok =
+          q &&
+          String(option).trim().toLowerCase() === String(q.correctAnswer).trim().toLowerCase()
+        if (ok) {
+          setCombo((c) => c + 1)
+          setCelebrate(true)
+          setTimeout(() => setCelebrate(false), 900)
+        } else {
+          setCombo(0)
+        }
+        return { ...prev, [questionId]: option }
+      })
+    },
+    [shuffledQuestions]
+  )
 
   const handleReset = () => {
     setAnswers({})
     setCurrentPage(0)
     setShowScore(false)
     setSessionRecorded(false)
+    setCombo(0)
+    setSessionKey((k) => k + 1) // brand-new generated set
   }
 
   const openScore = () => {
@@ -100,6 +103,15 @@ export default function QuizPage({ categoryId, subject, onGoHome, onTeach }) {
     setShowScore(true)
   }
 
+  // Auto-prompt score when all answered
+  useEffect(() => {
+    if (totalAnswered === shuffledQuestions.length && shuffledQuestions.length > 0 && !showScore) {
+      // light delay so last celebration plays
+      const t = setTimeout(() => openScore(), 600)
+      return () => clearTimeout(t)
+    }
+  }, [totalAnswered, shuffledQuestions.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -107,9 +119,10 @@ export default function QuizPage({ categoryId, subject, onGoHome, onTeach }) {
       exit={{ opacity: 0, y: -12 }}
       className="relative z-10 min-h-screen px-4 md:px-8 py-6 pb-16"
     >
+      <Celebration show={celebrate} seed={combo + totalAnswered} />
+
       <div className="max-w-3xl mx-auto">
-        {/* Top bar */}
-        <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <button
             type="button"
             onClick={onGoHome}
@@ -126,21 +139,22 @@ export default function QuizPage({ categoryId, subject, onGoHome, onTeach }) {
               Teach me
             </button>
           )}
-          <div className="text-center">
+          <div className="text-center flex-1">
             <div className="text-lg font-bold text-ink">
               {catMeta.icon} {catMeta.name}
             </div>
             <div className="text-xs text-muted">
-              {totalAnswered}/{shuffledQuestions.length} answered
+              {subject === 'math' ? 'Fresh questions · generated for you' : 'Practice'}
+              {' · '}
+              {totalAnswered}/{shuffledQuestions.length}
+              {combo >= 2 && <span className="text-success font-bold"> · 🔥 x{combo}</span>}
             </div>
           </div>
-          <div className="w-20" />
         </div>
 
-        {/* Progress */}
         <div className="pastel-card p-3 mb-5">
           <div className="flex justify-between text-xs text-muted mb-1">
-            <span>Progress</span>
+            <span>Quest progress</span>
             <span>{progress}%</span>
           </div>
           <div className="h-2.5 rounded-full bg-soft overflow-hidden">
@@ -154,65 +168,47 @@ export default function QuizPage({ categoryId, subject, onGoHome, onTeach }) {
         </div>
 
         <div className="mb-4">
-          <Mascot mood="encourage" size="sm" message={pickLine('encourage', currentPage)} />
+          <Mascot
+            mood={combo >= 3 ? 'celebrate' : combo >= 1 ? 'happy' : 'encourage'}
+            size="sm"
+            message={
+              combo >= 3
+                ? `Amazing streak of ${combo}!`
+                : pickLine(combo >= 1 ? 'correct' : 'encourage', currentPage + combo)
+            }
+          />
         </div>
 
-        {/* Questions */}
         <div className="space-y-4 mb-8">
           {pageQuestions.map((question, idx) => (
             <QuestionCard
-              key={question.id}
+              key={`${sessionKey}-${question.id}`}
               question={question}
               index={idx}
-              questionNumber={currentPage * QUESTIONS_PER_PAGE + idx + 1}
+              questionNumber={idx + 1}
               selectedAnswer={answers[question.id] || null}
               onSelect={handleSelect}
             />
           ))}
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             type="button"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-            className="pastel-btn px-4 py-2 bg-white text-ink text-sm border border-black/5 disabled:opacity-30"
+            onClick={openScore}
+            disabled={totalAnswered === 0}
+            className="flex-1 py-4 pastel-btn bg-ink text-white font-bold text-base disabled:opacity-40 shadow-soft"
           >
-            ← Prev
+            View score ({totalAnswered} answered)
           </button>
-          {Array.from({ length: totalPages }, (_, i) => i).map((pg) => (
-            <button
-              key={pg}
-              type="button"
-              onClick={() => handlePageChange(pg)}
-              className={`pastel-btn px-3.5 py-2 text-sm font-medium ${
-                pg === currentPage
-                  ? 'bg-ink text-white'
-                  : 'bg-white text-muted border border-black/5'
-              }`}
-            >
-              {pg + 1}
-            </button>
-          ))}
           <button
             type="button"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages - 1}
-            className="pastel-btn px-4 py-2 bg-white text-ink text-sm border border-black/5 disabled:opacity-30"
+            onClick={handleReset}
+            className="flex-1 py-4 pastel-btn bg-mint/60 text-ink font-bold text-base border border-mint"
           >
-            Next →
+            ✨ New adventure (new questions)
           </button>
         </div>
-
-        <button
-          type="button"
-          onClick={openScore}
-          disabled={totalAnswered === 0}
-          className="w-full py-4 pastel-btn bg-ink text-white font-bold text-base disabled:opacity-40 shadow-soft"
-        >
-          View score ({totalAnswered} answered)
-        </button>
       </div>
 
       {showScore && (

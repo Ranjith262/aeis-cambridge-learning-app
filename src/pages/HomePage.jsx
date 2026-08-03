@@ -19,7 +19,7 @@ const PASTEL_ISLAND = [
   'bg-sky/30', 'bg-mint/40', 'bg-peach/40', 'bg-butter/50', 'bg-coral/30',
 ]
 
-export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent }) {
+export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay }) {
   const [activeSubject, setActiveSubject] = useState('math')
   const [profile, setProfile] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -64,7 +64,7 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
         <div>
           <p className="text-sm font-semibold text-muted uppercase tracking-wide">AEIS Primary · Math Ready</p>
           <h1 className="text-3xl md:text-4xl font-bold text-ink mt-1">Math Kingdom</h1>
-          <p className="text-muted mt-1 text-sm">Learn · Practise · Mock · Grow</p>
+          <p className="text-muted mt-1 text-sm">Learn · Play · Practise · Mock · Grow</p>
         </div>
         <button
           type="button"
@@ -120,7 +120,12 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
       </div>
 
       {/* Main action hub */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        <button type="button" onClick={onPlay} className="pastel-card p-4 text-left island-card border-2 border-butter/80">
+          <div className="text-2xl mb-1">🎮</div>
+          <div className="font-bold text-ink text-sm">Play & Learn</div>
+          <div className="text-xs text-muted">Hands-on games</div>
+        </button>
         <button type="button" onClick={onMock} className="pastel-card p-4 text-left island-card border-2 border-ink/10">
           <div className="text-2xl mb-1">📋</div>
           <div className="font-bold text-ink text-sm">Mock Exam</div>
