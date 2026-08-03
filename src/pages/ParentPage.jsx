@@ -51,7 +51,14 @@ export default function ParentPage({ onGoHome }) {
 
       <div className="grid sm:grid-cols-3 gap-3 mb-6">
         <div className="pastel-card p-4 text-center">
-          <div className="text-3xl font-bold text-success">{readiness}%</div>
+          <div className="relative w-28 h-16 mx-auto mb-1">
+            <svg viewBox="0 0 100 50" className="w-full h-full">
+              <path d="M10 45 A40 40 0 0 1 90 45" fill="none" stroke="#E8F5E9" strokeWidth="10" strokeLinecap="round" />
+              <path d="M10 45 A40 40 0 0 1 90 45" fill="none" stroke="#00B894" strokeWidth="10" strokeLinecap="round"
+                strokeDasharray={`${Math.max(0, Math.min(100, readiness)) * 1.26} 126`} />
+            </svg>
+            <div className="absolute inset-0 flex items-end justify-center pb-0 text-2xl font-black text-ink">{readiness}%</div>
+          </div>
           <div className="text-xs text-muted">AEIS Math readiness</div>
         </div>
         <div className="pastel-card p-4 text-center">
@@ -83,20 +90,37 @@ export default function ParentPage({ onGoHome }) {
         )}
       </div>
 
-      <h2 className="font-bold text-ink mb-2">Mastery heat-map</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-6">
-        {mathCategories.map((c) => {
-          const m = getTopicMastery(c.id)
-          const bg =
-            m == null ? 'bg-soft' : m >= 80 ? 'bg-mint' : m >= 50 ? 'bg-butter' : 'bg-coral/50'
-          return (
-            <div key={c.id} className={`pastel-card p-2 ${bg}`}>
-              <div className="text-lg">{c.icon}</div>
-              <div className="text-[10px] font-semibold text-ink leading-tight">{c.name}</div>
-              <div className="text-xs font-bold text-ink">{m == null ? '—' : `${m}%`}</div>
-            </div>
-          )
-        })}
+      <h2 className="font-bold text-ink mb-2">Visual mastery by topic</h2>
+      <div className="pastel-card p-4 mb-6">
+        <div className="space-y-2">
+          {mathCategories.map((c) => {
+            const m = getTopicMastery(c.id)
+            const dots = 8
+            const filled = m == null ? 0 : Math.round((m / 100) * dots)
+            return (
+              <div key={c.id} className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-ink w-24 sm:w-32 truncate">{c.icon} {c.name}</span>
+                <div className="flex gap-1 flex-1">
+                  {Array.from({ length: dots }).map((_, i) => (
+                    <span
+                      key={i}
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full ${
+                        i < filled
+                          ? m >= 80
+                            ? 'bg-emerald-400'
+                            : m >= 50
+                              ? 'bg-amber-300'
+                              : 'bg-orange-300'
+                          : 'bg-gray-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs font-bold text-ink w-8 text-right">{m == null ? '—' : `${m}%`}</span>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       <div className="pastel-card p-4 mb-6">

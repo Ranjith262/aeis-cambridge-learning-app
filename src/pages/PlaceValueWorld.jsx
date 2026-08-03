@@ -85,16 +85,29 @@ export default function PlaceValueWorld({ onGoHome }) {
               exit={{ opacity: 0 }}
               className="text-center"
             >
+              <p className="text-xs font-bold uppercase tracking-wide text-ink/40 mb-2">Concept Mastery · Place Value</p>
+              <h1 className="text-2xl sm:text-3xl font-black text-ink mb-3">Primary 1 Place Value</h1>
+              {/* CPA track */}
+              <div className="flex items-center justify-center gap-1 mb-1 px-2">
+                <div className="flex-1 h-2 rounded-full bg-emerald-400" />
+                <span className="w-6 h-6 rounded-full bg-emerald-400 text-white text-[10px] font-bold flex items-center justify-center">+</span>
+                <div className="flex-1 h-2 rounded-full bg-emerald-300" />
+                <span className="w-6 h-6 rounded-full bg-emerald-300 text-white text-[10px] font-bold flex items-center justify-center">+</span>
+                <div className="flex-1 h-2 rounded-full bg-emerald-200" />
+                <span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center">›</span>
+              </div>
+              <div className="flex justify-between text-[10px] font-semibold text-ink/50 mb-5 px-1">
+                <span>Concrete</span><span>Pictorial</span><span>Abstract</span>
+              </div>
               <motion.div
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
                 className="text-7xl mb-3"
               >
-                🏰
+                🦸‍♂️
               </motion.div>
-              <h1 className="text-3xl font-black text-ink mb-2">Place Value Island</h1>
               <p className="text-ink/70 mb-6 text-sm leading-relaxed">
-                Discover the secret of tens and ones — the power that unlocks every bigger number.
+                Captain Number says: <strong>10 ones become 1 ten!</strong>
               </p>
               <Mascot mood="happy" message="I'll show you the magic bundle: 10 ones become 1 ten!" className="justify-center mb-6" />
               <button
