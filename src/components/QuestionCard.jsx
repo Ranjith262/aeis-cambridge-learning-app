@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getPraise } from '../utils/explanations'
 import Mascot, { pickLine } from './Mascot'
+import { ManipulativeFor } from './manipulatives'
+import ShortAnswerInput from './ShortAnswerInput'
 
 export default function QuestionCard({
   question,
@@ -12,8 +14,14 @@ export default function QuestionCard({
 }) {
   const [showExplain, setShowExplain] = useState(false)
   const isAnswered = selectedAnswer != null
-  const isCorrect = isAnswered && selectedAnswer === question.correctAnswer
+  const isCorrect =
+    isAnswered &&
+    String(selectedAnswer).trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase()
   const praise = getPraise(questionNumber + index)
+
+  useEffect(() => {
+    if (selectedAnswer != null) setShowExplain(true)
+  }, [selectedAnswer])
 
   const handleSelect = (option) => {
     if (isAnswered) return
@@ -35,6 +43,14 @@ export default function QuestionCard({
         <p className="text-ink font-medium leading-relaxed pt-0.5">{question.question}</p>
       </div>
 
+      {question.format === 'short_answer' || !question.options ? (
+        <ShortAnswerInput
+          question={question}
+          selectedAnswer={selectedAnswer}
+          onSelect={onSelect}
+          disabled={isAnswered}
+        />
+      ) : (
       <div className="grid gap-2">
         {question.options.map((option) => {
           let style =
@@ -65,6 +81,7 @@ export default function QuestionCard({
           )
         })}
       </div>
+      )}
 
       <AnimatePresence>
         {isAnswered && showExplain && (
@@ -74,11 +91,7 @@ export default function QuestionCard({
             exit={{ opacity: 0, height: 0 }}
             className="mt-4 overflow-hidden"
           >
-            <div
-              className={`rounded-xl p-4 ${
-                isCorrect ? 'bg-mint/30' : 'bg-peach/40'
-              }`}
-            >
+            <div className={`rounded-xl p-4 ${isCorrect ? 'bg-mint/30' : 'bg-peach/40'}`}>
               <Mascot
                 mood={isCorrect ? 'happy' : 'thinking'}
                 size="sm"
@@ -105,6 +118,11 @@ export default function QuestionCard({
                   </p>
                 )}
               </div>
+              {!isCorrect && (
+                <div className="mt-3">
+                  <ManipulativeFor topicId={question.category || question.topicId} question={question} />
+                </div>
+              )}
             </div>
           </motion.div>
         )}

@@ -3,21 +3,32 @@ import { AnimatePresence } from 'framer-motion'
 import SoftBackground from './components/SoftBackground'
 import HomePage from './pages/HomePage'
 import QuizPage from './pages/QuizPage'
+import TeachPage from './pages/TeachPage'
+import MockExamPage from './pages/MockExamPage'
+import ReviewGardenPage from './pages/ReviewGardenPage'
+import ParentPage from './pages/ParentPage'
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('home')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedSubject, setSelectedSubject] = useState('math')
+  const [page, setPage] = useState('home')
+  const [categoryId, setCategoryId] = useState('all')
+  const [subject, setSubject] = useState('math')
+  const [teachTopic, setTeachTopic] = useState('numbersTo100')
 
-  const startQuiz = (categoryId, subject) => {
-    setSelectedCategory(categoryId)
-    setSelectedSubject(subject || 'math')
-    setCurrentPage('quiz')
+  const goHome = () => {
+    setPage('home')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const goHome = () => {
-    setCurrentPage('home')
+  const startQuiz = (catId, subj = 'math') => {
+    setCategoryId(catId)
+    setSubject(subj)
+    setPage('quiz')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const startTeach = (topicId) => {
+    setTeachTopic(topicId || 'numbersTo100')
+    setPage('teach')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -25,16 +36,42 @@ export default function App() {
     <div className="min-h-screen relative">
       <SoftBackground />
       <AnimatePresence mode="wait">
-        {currentPage === 'home' ? (
-          <HomePage key="home" onStartQuiz={startQuiz} />
-        ) : (
-          <QuizPage
-            key="quiz"
-            categoryId={selectedCategory}
-            subject={selectedSubject}
-            onGoHome={goHome}
+        {page === 'home' && (
+          <HomePage
+            key="home"
+            onStartQuiz={startQuiz}
+            onTeach={startTeach}
+            onMock={() => setPage('mock')}
+            onReview={() => setPage('review')}
+            onParent={() => setPage('parent')}
           />
         )}
+        {page === 'quiz' && (
+          <QuizPage
+            key="quiz"
+            categoryId={categoryId}
+            subject={subject}
+            onGoHome={goHome}
+            onTeach={() => startTeach(categoryId === 'all' ? 'numbersTo100' : categoryId)}
+          />
+        )}
+        {page === 'teach' && (
+          <TeachPage
+            key="teach"
+            topicId={teachTopic}
+            onBack={goHome}
+            onDone={() => startQuiz(teachTopic, 'math')}
+          />
+        )}
+        {page === 'mock' && <MockExamPage key="mock" onGoHome={goHome} />}
+        {page === 'review' && (
+          <ReviewGardenPage
+            key="review"
+            onGoHome={goHome}
+            onReviewTopic={(tid) => startQuiz(tid, 'math')}
+          />
+        )}
+        {page === 'parent' && <ParentPage key="parent" onGoHome={goHome} />}
       </AnimatePresence>
     </div>
   )

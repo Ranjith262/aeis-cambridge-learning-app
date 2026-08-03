@@ -7,6 +7,7 @@ import QuestionCard from '../components/QuestionCard'
 import ScoreModal from '../components/ScoreModal'
 import Mascot, { pickLine } from '../components/Mascot'
 import { recordSession } from '../utils/progress'
+import { mixShortAnswers } from '../utils/shortAnswer'
 
 const QUESTIONS_PER_PAGE = 8
 
@@ -27,7 +28,7 @@ function getCategoryMeta(categoryId, subject) {
   )
 }
 
-export default function QuizPage({ categoryId, subject, onGoHome }) {
+export default function QuizPage({ categoryId, subject, onGoHome, onTeach }) {
   const [answers, setAnswers] = useState({})
   const [currentPage, setCurrentPage] = useState(0)
   const [showScore, setShowScore] = useState(false)
@@ -43,7 +44,8 @@ export default function QuizPage({ categoryId, subject, onGoHome }) {
           ? getMathQuestionsByCategory(categoryId)
           : getQuestionsByCategory(categoryId).map((q) => ({ ...q, category: categoryId }))
     }
-    return shuffleQuestions(qs)
+    const shuffled = shuffleQuestions(qs)
+    return subject === 'math' ? mixShortAnswers(shuffled, 0.15) : shuffled
   }, [categoryId, subject])
 
   const totalPages = Math.max(1, Math.ceil(shuffledQuestions.length / QUESTIONS_PER_PAGE))
@@ -115,6 +117,15 @@ export default function QuizPage({ categoryId, subject, onGoHome }) {
           >
             ← Kingdom
           </button>
+          {onTeach && subject === 'math' && (
+            <button
+              type="button"
+              onClick={onTeach}
+              className="pastel-btn px-3 py-2 bg-peach/50 text-ink text-xs border border-peach"
+            >
+              Teach me
+            </button>
+          )}
           <div className="text-center">
             <div className="text-lg font-bold text-ink">
               {catMeta.icon} {catMeta.name}
