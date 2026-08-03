@@ -19,7 +19,7 @@ const PASTEL_ISLAND = [
   'bg-sky/30', 'bg-mint/40', 'bg-peach/40', 'bg-butter/50', 'bg-coral/30',
 ]
 
-export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay }) {
+export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue }) {
   const [activeSubject, setActiveSubject] = useState('math')
   const [profile, setProfile] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -118,6 +118,23 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
           </div>
         </div>
       </div>
+
+      {/* Phase 1 vertical slice — Place Value Island */}
+      <button
+        type="button"
+        onClick={onPlaceValue}
+        className="w-full mb-6 rounded-2xl p-5 text-left shadow-soft border-2 border-sky/40 overflow-hidden relative"
+        style={{ background: 'linear-gradient(135deg, #E3F2FD 0%, #E8F5E9 50%, #FFF8E1 100%)' }}
+      >
+        <div className="relative z-10 flex items-center gap-4">
+          <span className="text-5xl">🏰</span>
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wide text-success">Featured world</div>
+            <div className="text-xl font-black text-ink">Place Value Island</div>
+            <div className="text-sm text-ink/70">Story · Building lab · Fresh questions · Parent tip</div>
+          </div>
+        </div>
+      </button>
 
       {/* Main action hub */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">

@@ -8,6 +8,7 @@ import MockExamPage from './pages/MockExamPage'
 import ReviewGardenPage from './pages/ReviewGardenPage'
 import ParentPage from './pages/ParentPage'
 import PlayPage from './pages/PlayPage'
+import PlaceValueWorld from './pages/PlaceValueWorld'
 
 export default function App() {
   const [page, setPage] = useState('home')
@@ -46,6 +47,7 @@ export default function App() {
             onReview={() => setPage('review')}
             onParent={() => setPage('parent')}
             onPlay={() => setPage('play')}
+            onPlaceValue={() => setPage('placeValue')}
           />
         )}
         {page === 'quiz' && (
@@ -75,6 +77,7 @@ export default function App() {
         )}
         {page === 'parent' && <ParentPage key="parent" onGoHome={goHome} />}
         {page === 'play' && <PlayPage key="play" onGoHome={goHome} />}
+        {page === 'placeValue' && <PlaceValueWorld key="pv" onGoHome={goHome} />}
       </AnimatePresence>
     </div>
   )
