@@ -382,33 +382,89 @@ const generators = {
   },
 
   time() {
-    const h = rand(1, 11)
-    const mode = pick(['oclock', 'half'])
-    if (mode === 'oclock') {
-      const correct = `${h}:00`
+    // Defer to richer MOE-aligned patterns (inline subset for all-topic mix)
+    const h = rand(1, 12)
+    const kind = pick(['hands', 'half', 'duration', 'ampm', 'five', 'later'])
+    if (kind === 'half') {
+      const hh = h === 12 ? 1 : h
+      const correct = `${hh}:30`
       return {
         id: uid('t'),
         category: 'time',
         format: 'mcq',
-        question: `What time is ${h} o'clock?`,
-        options: shuffleArray([correct, `${h}:30`, `${h + 1}:00`, `${h}:15`]),
+        question: `Half past ${hh} matches which digital time?`,
+        options: mcq(correct, [`${hh}:00`, `${hh === 12 ? 1 : hh + 1}:00`, `${hh}:15`]),
         correctAnswer: correct,
-        explanation: `At ${h} o'clock, the short hand points to ${h} and the long hand to 12.`,
-        example: `o'clock means the long hand is on 12.`,
+        explanation: `Half past ${hh} is ${hh}:30. Long hand on 6.`,
       }
     }
-    const correct = `${h}:30`
+    if (kind === 'duration') {
+      const hh = rand(1, 9)
+      return {
+        id: uid('t'),
+        category: 'time',
+        format: 'mcq',
+        question: `A lesson starts at ${hh}:00 and ends at ${hh}:30. How long is it?`,
+        options: mcq('30 minutes', ['1 hour', '15 minutes', '2 hours']),
+        correctAnswer: '30 minutes',
+        explanation: `From ${hh}:00 to ${hh}:30 is 30 minutes (half an hour).`,
+      }
+    }
+    if (kind === 'ampm') {
+      const correct = pick(['a.m.', 'p.m.'])
+      const q = correct === 'a.m.'
+        ? 'Is breakfast time usually a.m. or p.m.?'
+        : 'Is bedtime at night usually a.m. or p.m.?'
+      return {
+        id: uid('t'),
+        category: 'time',
+        format: 'mcq',
+        question: q,
+        options: mcq(correct, ['a.m.', 'p.m.', 'noon only', 'never']),
+        correctAnswer: correct,
+        explanation: correct === 'a.m.' ? 'Morning times use a.m.' : 'Afternoon and evening use p.m.',
+      }
+    }
+    if (kind === 'five') {
+      const hh = rand(1, 11)
+      const m = pick([5, 10, 15, 20, 25, 35, 40, 45])
+      const hand = m / 5
+      const correct = `${hh}:${String(m).padStart(2, '0')}`
+      return {
+        id: uid('t'),
+        category: 'time',
+        format: 'mcq',
+        question: `Long hand on ${hand === 0 ? 12 : hand}, short hand near ${hh}. What time?`,
+        options: mcq(correct, [`${hh}:00`, `${hh}:30`, `${hh}:${String(m + 5).padStart(2, '0')}`]),
+        correctAnswer: correct,
+        explanation: `Long hand shows minutes: ${m}. Time is ${correct}.`,
+      }
+    }
+    if (kind === 'later') {
+      const hh = rand(1, 10)
+      const correct = `${hh === 12 ? 1 : hh + 1}:00`
+      return {
+        id: uid('t'),
+        category: 'time',
+        format: 'mcq',
+        question: `It is ${hh}:00. What time is it in 1 hour?`,
+        options: mcq(correct, [`${hh}:30`, `${hh}:00`, `${hh}:15`]),
+        correctAnswer: correct,
+        explanation: `${hh}:00 plus 1 hour is ${correct}.`,
+      }
+    }
+    // hands
+    const hh = h > 12 ? 1 : h
     return {
       id: uid('t'),
       category: 'time',
       format: 'mcq',
-      question: `Half past ${h} is written as:`,
-      options: shuffleArray([correct, `${h}:00`, `${h}:15`, `${h + 1}:00`]),
-      correctAnswer: correct,
-      explanation: `Half past ${h} is ${h}:30. The long hand is on 6.`,
-      example: `Half an hour after ${h}:00.`,
+      question: `Short hand on ${hh}, long hand on 12. What time is it?`,
+      options: mcq(`${hh}:00`, [`${hh}:30`, `${hh === 12 ? 1 : hh + 1}:00`, `${hh}:15`]),
+      correctAnswer: `${hh}:00`,
+      explanation: `Long hand on 12 means o'clock → ${hh}:00.`,
     }
-  },
+  }
 
   money() {
     const coins = [5, 10, 20, 50]
