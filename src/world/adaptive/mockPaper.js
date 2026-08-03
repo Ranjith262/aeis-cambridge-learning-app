@@ -8,6 +8,9 @@ import { generateSubQuestion } from '../subtraction/subGenerator'
 import { generateMoneyQuestion } from '../money/moneyGenerator'
 import { generateTimeQuestion } from '../time/timeGenerator'
 import { generateShapeQuestion } from '../shapes/shapesGenerator'
+import { generateWordProblem } from '../wordProblems/wpGenerator'
+import { generateMeasurementQuestion } from '../measurement/measGenerator'
+import { generateGraphQuestion } from '../graphs/graphGenerator'
 import { generateQuestions } from '../../utils/dynamicQuestions'
 import { gateQuestion, stemKey, collectUnique } from '../../utils/questionQuality'
 import { shuffleArray } from '../../utils/shuffle'
@@ -23,9 +26,9 @@ const FACTORIES = [
   generateMoneyQuestion,
   generateTimeQuestion,
   generateShapeQuestion,
-  () => generateQuestions('wordProblems', 1)[0],
-  () => generateQuestions('pictureGraphs', 1)[0],
-  () => generateQuestions('measurement', 1)[0],
+  generateWordProblem,
+  generateMeasurementQuestion,
+  generateGraphQuestion,
   () => generateQuestions('numbersTo100', 1)[0],
 ]
 

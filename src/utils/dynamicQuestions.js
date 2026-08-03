@@ -1,4 +1,7 @@
 import { gateQuestion, stemKey } from './questionQuality'
+import { generateWordProblem } from '../world/wordProblems/wpGenerator'
+import { generateMeasurementQuestion } from '../world/measurement/measGenerator'
+import { generateGraphQuestion } from '../world/graphs/graphGenerator'
 /**
  * Procedural AEIS P1 Math question generator.
  * Every call produces fresh numbers, contexts, and distractors — never a fixed set.
@@ -366,21 +369,9 @@ const generators = {
   },
 
   measurement() {
-    const a = rand(5, 30)
-    const b = rand(5, 30)
-    if (a === b) return generators.measurement()
-    const longer = Math.max(a, b)
-    return {
-      id: uid('m'),
-      category: 'measurement',
-      format: 'mcq',
-      question: `Which is longer: ${a} cm or ${b} cm?`,
-      options: mcq(`${longer} cm`, [`${Math.min(a, b)} cm`, `${a + b} cm`, `${Math.abs(a - b)} cm`]),
-      correctAnswer: `${longer} cm`,
-      explanation: `${longer} cm is longer than ${Math.min(a, b)} cm.`,
-      example: `The bigger number of cm means longer.`,
-    }
+    return generateMeasurementQuestion()
   },
+
 
   time() {
     // Defer to richer MOE-aligned patterns (inline subset for all-topic mix)
@@ -510,88 +501,14 @@ const generators = {
   },
 
   wordProblems() {
-    const name = pick(NAMES)
-    const thing = pick(THINGS)
-    const op = pick(['add', 'sub'])
-    if (op === 'add') {
-      const a = rand(3, 25)
-      const b = rand(2, 20)
-      const correct = a + b
-      return {
-        id: uid('w'),
-        category: 'wordProblems',
-        format: pick(['mcq', 'short_answer']),
-        question: `${name} collects ${a} ${thing} in the morning and ${b} in the afternoon. How many ${thing} in total?`,
-        options: mcq(correct, [correct + 1, correct - 1, a, b]),
-        correctAnswer: String(correct),
-        explanation: `This is addition: ${a} + ${b} = ${correct}.`,
-        example: `Draw a bar model with two parts.`,
-      }
-    }
-    const a = rand(10, 40)
-    const b = rand(1, a - 1)
-    const correct = a - b
-    return {
-      id: uid('w'),
-      category: 'wordProblems',
-      format: pick(['mcq', 'short_answer']),
-      question: `${name} has ${a} ${thing}. ${name} uses ${b}. How many are left?`,
-      options: mcq(correct, [correct + 1, a + b, b, a]),
-      correctAnswer: String(correct),
-      explanation: `This is subtraction: ${a} − ${b} = ${correct}.`,
-      example: `Start with the whole, take away a part.`,
-    }
+    return generateWordProblem()
   },
 
+
   pictureGraphs() {
-    const a = rand(2, 8)
-    const b = rand(2, 8)
-    const c = rand(2, 8)
-    const labels = pick([
-      ['🍎', '🍊', '🍇'],
-      ['⚽', '🏀', '🎾'],
-      ['🐶', '🐱', '🐰'],
-    ])
-    const most = Math.max(a, b, c)
-    const mostLabel = most === a ? labels[0] : most === b ? labels[1] : labels[2]
-    const mode = pick(['most', 'total', 'diff'])
-    if (mode === 'total') {
-      const total = a + b + c
-      return {
-        id: uid('pg'),
-        category: 'pictureGraphs',
-        format: 'mcq',
-        question: `${labels[0].repeat(a)} ${labels[1].repeat(b)} ${labels[2].repeat(c)} — How many in total?`,
-        options: mcq(total, [total + 1, total - 1, a + b, most]),
-        correctAnswer: String(total),
-        explanation: `${a} + ${b} + ${c} = ${total}.`,
-        example: `Add each group.`,
-      }
-    }
-    if (mode === 'diff') {
-      const diff = Math.abs(a - b)
-      return {
-        id: uid('pg'),
-        category: 'pictureGraphs',
-        format: 'mcq',
-        question: `${labels[0].repeat(a)} ${labels[1].repeat(b)} — How many more ${a >= b ? labels[0] : labels[1]} than ${a >= b ? labels[1] : labels[0]}?`,
-        options: mcq(diff, [diff + 1, a + b, a, b]),
-        correctAnswer: String(diff),
-        explanation: `Difference: ${Math.max(a, b)} − ${Math.min(a, b)} = ${diff}.`,
-        example: `Compare the two rows.`,
-      }
-    }
-    return {
-      id: uid('pg'),
-      category: 'pictureGraphs',
-      format: 'mcq',
-      question: `${labels[0].repeat(a)} ${labels[1].repeat(b)} ${labels[2].repeat(c)} — Which has the MOST?`,
-      options: shuffleArray([labels[0], labels[1], labels[2], 'Same']).slice(0, 4),
-      correctAnswer: mostLabel,
-      explanation: `Counts: ${labels[0]}=${a}, ${labels[1]}=${b}, ${labels[2]}=${c}. Most is ${mostLabel}.`,
-      example: `Count each picture group.`,
-    }
+    return generateGraphQuestion()
   },
+
 }
 
 export const DYNAMIC_TOPICS = Object.keys(generators)
