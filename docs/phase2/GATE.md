@@ -1,23 +1,24 @@
-# Phase 2 Gate — Math islands
+# Phase 2 Gate — Math islands (updated)
 
-## Complete this increment
-- [x] Shared `IslandWorld` runtime (enter → cinema → lab → practice → done)
-- [x] Addition Island (cinema, bar+number-line lab, infinite generator, parent line)
-- [x] Subtraction Island (same craft template)
-- [x] Number Bonds Island (prior)
-- [x] Place Value Island (Phase 1 reference)
-- [x] Island unlock helper (`islandUnlocks.js`) + visit tracking on PV
+## Complete
+- [x] Shared IslandWorld runtime
+- [x] Place Value (Phase 1), Bonds, Addition, Subtraction
+- [x] Money Island (cinema, coin lab, infinite generator)
+- [x] Time Island (cinema, clock lab, infinite generator)
+- [x] Map island click → dedicated world when available
+- [x] Home hub cards for all six concept islands
+- [x] Unlock helper + visit tracking
 
-## Manual test
-1. Home → Addition Island → story → lab → practise → new adventure
-2. Home → Subtraction Island → same path
-3. Confirm questions change each new adventure
-4. Place Value still works as gold standard
+## Manual test path
+1. Home cards: Place Value, Bonds, Addition, Subtraction, Money, Time
+2. Map: tap Numbers / Addition / Money / Time islands → correct world
+3. Each world: story → lab → practise → new adventure (questions change)
+4. Remaining map topics without world still open quiz generator path
 
-## Remaining toward full Phase 2
-- [ ] Wire unlock rules into map UI (grey locked islands)
-- [ ] Money / Time / Graphs islands
-- [ ] Elevate Bonds cinema to full multi-beat parity with Addition
+## Remaining (optional Phase 2 polish)
+- [ ] Shapes / Measurement / Graphs dedicated worlds
+- [ ] Visual lock/recommended badges on map
+- [ ] Bonds multi-beat cinema upgrade
 
 ## Status
-**Phase 2 core template: PASS** — four concept islands live on shared or dedicated runtimes.
+**Phase 2 core: COMPLETE** — six concept islands + map routing + shared runtime.

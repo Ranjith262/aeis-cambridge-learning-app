@@ -1,5 +1,6 @@
 import { mathCategories } from '../data/mathQuestions'
 import { getTopicMastery } from '../utils/progress'
+import { CATEGORY_TO_WORLD } from '../utils/islandUnlocks'
 
 /**
  * Illustrated Math Kingdom — castle-island layout inspired by product mockups.
@@ -18,7 +19,7 @@ const POSITIONS = [
   { x: 50, y: 88 },
 ]
 
-export default function MathKingdomMap({ onSelectTopic, onTeach }) {
+export default function MathKingdomMap({ onSelectTopic, onTeach, onOpenWorld }) {
   return (
     <div className="kingdom-map-shell rounded-2xl border border-black/5 shadow-soft" style={{ minHeight: 380 }}>
       <svg
@@ -73,10 +74,14 @@ export default function MathKingdomMap({ onSelectTopic, onTeach }) {
             {/* Island plate */}
             <button
               type="button"
-              onClick={() => onSelectTopic?.(cat.id)}
+              onClick={() => {
+                const world = CATEGORY_TO_WORLD[cat.id]
+                if (world && onOpenWorld) onOpenWorld(world)
+                else onSelectTopic?.(cat.id)
+              }}
               className="relative flex flex-col items-center border-0 bg-transparent p-1 cursor-pointer touch-manipulation"
               style={{ WebkitTapHighlightColor: 'transparent' }}
-              aria-label={`Practise ${cat.name}`}
+              aria-label={`Open ${cat.name}`}
             >
               {/* Castle card — mockup style */}
               <div

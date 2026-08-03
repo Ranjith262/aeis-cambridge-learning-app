@@ -19,7 +19,7 @@ const PASTEL_ISLAND = [
   'bg-sky/30', 'bg-mint/40', 'bg-peach/40', 'bg-butter/50', 'bg-coral/30',
 ]
 
-export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds, onAddition, onSubtraction }) {
+export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onParent, onPlay, onPlaceValue, onBonds, onAddition, onSubtraction, onMoney, onTime, onOpenWorld }) {
   const [activeSubject, setActiveSubject] = useState('math')
   const [profile, setProfile] = useState(null)
   const [showSettings, setShowSettings] = useState(false)
@@ -158,6 +158,16 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
           <div className="font-black text-ink text-sm">Subtraction Island</div>
           <div className="text-[10px] text-ink/60">Take away · count back</div>
         </button>
+        <button type="button" onClick={onMoney} className="rounded-2xl p-4 text-left shadow-soft border-2 border-butter/60" style={{ background: 'linear-gradient(135deg,#FFF8E1,#E8F5E9)' }}>
+          <div className="text-3xl mb-1">💰</div>
+          <div className="font-black text-ink text-sm">Money Island</div>
+          <div className="text-[10px] text-ink/60">Coins · cents</div>
+        </button>
+        <button type="button" onClick={onTime} className="rounded-2xl p-4 text-left shadow-soft border-2 border-sky/50" style={{ background: 'linear-gradient(135deg,#E3F2FD,#F3E5F5)' }}>
+          <div className="text-3xl mb-1">🕐</div>
+          <div className="font-black text-ink text-sm">Time Island</div>
+          <div className="text-[10px] text-ink/60">O'clock · half past</div>
+        </button>
       </div>
 
       {/* Main action hub */}
@@ -227,7 +237,7 @@ export default function HomePage({ onStartQuiz, onTeach, onMock, onReview, onPar
       <h2 className="text-lg font-bold text-ink mb-3">{isMath ? 'Explore the Math Kingdom map' : 'English topics'}</h2>
       {isMath ? (
         <div className="mb-4">
-          <MathKingdomMap onSelectTopic={(id) => onStartQuiz(id, 'math')} onTeach={onTeach} />
+          <MathKingdomMap onOpenWorld={onOpenWorld} onSelectTopic={(id) => onStartQuiz(id, 'math')} onTeach={onTeach} />
         </div>
       ) : (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
