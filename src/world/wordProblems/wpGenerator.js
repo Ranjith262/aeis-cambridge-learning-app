@@ -21,19 +21,26 @@ function shuffle(a) {
 }
 
 function numOpts(correct, wrongs) {
-  const s = new Set([String(correct)])
+  const correctStr = String(correct)
+  const rest = []
+  const seen = new Set([correctStr])
   for (const w of wrongs) {
     if (w == null || Number(w) < 0) continue
-    if (String(w) === String(correct)) continue
-    s.add(String(w))
+    const ws = String(w)
+    if (seen.has(ws)) continue
+    seen.add(ws)
+    rest.push(ws)
   }
   let g = 0
-  while (s.size < 4 && g++ < 20) {
-    const j = Number(correct) + rand(-6, 8)
-    if (j >= 0 && j !== Number(correct)) s.add(String(j))
+  while (rest.length < 3 && g++ < 30) {
+    const j = Number(correct) + (g % 2 === 0 ? g : -g)
+    if (j < 0 || j === Number(correct)) continue
+    const js = String(j)
+    if (seen.has(js)) continue
+    seen.add(js)
+    rest.push(js)
   }
-  const rest = shuffle([...s].filter((x) => x !== String(correct)))
-  return shuffle([String(correct), ...rest]).slice(0, 4)
+  return shuffle([correctStr, ...shuffle(rest).slice(0, 3)])
 }
 
 /** Join: A has x, gets y more */
