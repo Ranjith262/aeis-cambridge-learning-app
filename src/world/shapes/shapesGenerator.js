@@ -83,10 +83,13 @@ function patternNext() {
     { seq: '○ □ ○ □ ○', next: '□', opts: ['□', '○', '△', '☆'] },
   ]
   const p = pick(patterns)
+  // unique options only
+  const options = shuffle([...new Set(p.opts)]).slice(0, 4)
+  if (!options.includes(p.next)) options[0] = p.next
   return {
     id: uid(), skillId: 'SHAPE_PATTERN', category: 'shapesAndPatterns', format: 'mcq',
     question: `What comes next? ${p.seq} ___`,
-    options: shuffle(p.opts),
+    options,
     correctAnswer: p.next,
     explanation: `The next item in the pattern is ${p.next}.`,
   }

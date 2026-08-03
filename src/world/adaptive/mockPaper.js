@@ -14,6 +14,35 @@ import { shuffleArray } from '../../utils/shuffle'
 export const MCQ_COUNT = 29
 export const SA_COUNT = 17
 
+
+function sanitizeOptions(q) {
+  if (!q.options || !Array.isArray(q.options)) return q
+  const seen = new Set()
+  const out = []
+  for (const o of q.options) {
+    const k = String(o).replace(/\s+/g, ' ').trim()
+    if (!k || seen.has(k)) continue
+    seen.add(k)
+    out.push(String(o).trim())
+  }
+  const correct = String(q.correctAnswer).replace(/\s+/g, ' ').trim()
+  // drop options that are commutative twin of correct for a+b
+  const cm = correct.match(/^(\d+)\s*\+\s*(\d+)$/)
+  const filtered = out.filter((o) => {
+    if (!cm) return true
+    const m = String(o).match(/^(\d+)\s*\+\s*(\d+)$/)
+    if (!m) return true
+    const same = (m[1] === cm[1] && m[2] === cm[2]) || (m[1] === cm[2] && m[2] === cm[1])
+    if (same && String(o).replace(/\s+/g, ' ').trim() !== correct) return false
+    return true
+  })
+  if (!filtered.map((x) => x.replace(/\s+/g, ' ').trim()).includes(correct)) {
+    filtered.unshift(String(q.correctAnswer))
+  }
+  while (filtered.length < 4) filtered.push(`—${filtered.length}`)
+  return { ...q, options: filtered.slice(0, 4), correctAnswer: String(q.correctAnswer).trim() }
+}
+
 function stemKey(q) {
   return String(q?.question || '')
     .toLowerCase()
@@ -113,7 +142,7 @@ export function buildCraftMockPaper() {
     const k = stemKey(q)
     if (mcqSeen.has(k)) continue
     mcqSeen.has(k) || mcqSeen.add(k)
-    mcq.push(toMcq(q))
+    mcq.push(sanitizeOptions(toMcq(q)))
   }
   while (mcq.length < MCQ_COUNT) {
     const q = toMcq(generateAddQuestion())
