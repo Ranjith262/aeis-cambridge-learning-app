@@ -34,7 +34,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative overflow-x-hidden overscroll-none">
       <SoftBackground />
       <AnimatePresence mode="wait">
         {page === 'home' && (

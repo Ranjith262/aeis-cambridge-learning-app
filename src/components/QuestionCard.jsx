@@ -4,6 +4,7 @@ import { getPraise } from '../utils/explanations'
 import Mascot, { pickLine } from './Mascot'
 import { ManipulativeFor } from './manipulatives'
 import ShortAnswerInput from './ShortAnswerInput'
+import TeachAnimation from './TeachAnimation'
 
 export default function QuestionCard({
   question,
@@ -11,8 +12,10 @@ export default function QuestionCard({
   questionNumber,
   selectedAnswer,
   onSelect,
+  allowTeach = true,
 }) {
   const [showExplain, setShowExplain] = useState(false)
+  const [showTeach, setShowTeach] = useState(false)
   const isAnswered = selectedAnswer != null
   const isCorrect =
     isAnswered &&
@@ -33,15 +36,25 @@ export default function QuestionCard({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      className="pastel-card p-5"
+      transition={{ delay: Math.min(index * 0.04, 0.2) }}
+      className="pastel-card p-4 sm:p-5"
     >
-      <div className="flex items-start gap-3 mb-4">
+      <div className="flex items-start gap-3 mb-3">
         <span className="flex-shrink-0 w-8 h-8 rounded-full bg-mint/60 text-ink text-sm font-bold flex items-center justify-center">
           {questionNumber}
         </span>
-        <p className="text-ink font-medium leading-relaxed pt-0.5">{question.question}</p>
+        <p className="text-ink font-medium leading-relaxed pt-0.5 flex-1">{question.question}</p>
       </div>
+
+      {allowTeach && !isAnswered && (
+        <button
+          type="button"
+          onClick={() => setShowTeach(true)}
+          className="mb-3 pastel-btn px-3 py-1.5 text-xs bg-peach/50 text-ink border border-peach/60"
+        >
+          🎬 Teach me (watch animation)
+        </button>
+      )}
 
       {question.format === 'short_answer' || !question.options ? (
         <ShortAnswerInput
@@ -51,36 +64,36 @@ export default function QuestionCard({
           disabled={isAnswered}
         />
       ) : (
-      <div className="grid gap-2">
-        {question.options.map((option) => {
-          let style =
-            'option-btn w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-colors '
-          if (!isAnswered) {
-            style += 'border-black/5 bg-soft/50 text-ink hover:border-mint hover:bg-mint/20'
-          } else if (option === question.correctAnswer) {
-            style += 'border-success bg-mint/40 text-ink'
-          } else if (option === selectedAnswer) {
-            style += 'border-coral bg-coral/30 text-ink'
-          } else {
-            style += 'border-transparent bg-soft/30 text-muted'
-          }
+        <div className="grid gap-2">
+          {question.options.map((option) => {
+            let style =
+              'option-btn w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium '
+            if (!isAnswered) {
+              style += 'border-black/5 bg-soft/50 text-ink hover:border-mint hover:bg-mint/20'
+            } else if (option === question.correctAnswer) {
+              style += 'border-success bg-mint/40 text-ink'
+            } else if (option === selectedAnswer) {
+              style += 'border-coral bg-coral/30 text-ink'
+            } else {
+              style += 'border-transparent bg-soft/30 text-muted'
+            }
 
-          return (
-            <button
-              key={option}
-              type="button"
-              disabled={isAnswered}
-              onClick={() => handleSelect(option)}
-              className={style}
-            >
-              {option}
-              {isAnswered && option === question.correctAnswer && (
-                <span className="float-right">✓</span>
-              )}
-            </button>
-          )
-        })}
-      </div>
+            return (
+              <button
+                key={option}
+                type="button"
+                disabled={isAnswered}
+                onClick={() => handleSelect(option)}
+                className={style}
+              >
+                {option}
+                {isAnswered && option === question.correctAnswer && (
+                  <span className="float-right">✓</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       )}
 
       <AnimatePresence>
@@ -119,14 +132,27 @@ export default function QuestionCard({
                 )}
               </div>
               {!isCorrect && (
-                <div className="mt-3">
+                <div className="mt-3 space-y-2">
                   <ManipulativeFor topicId={question.category || question.topicId} question={question} />
+                  {allowTeach && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTeach(true)}
+                      className="pastel-btn px-3 py-1.5 text-xs bg-ink text-white"
+                    >
+                      🎬 Watch teaching animation
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showTeach && allowTeach && (
+        <TeachAnimation question={question} onClose={() => setShowTeach(false)} />
+      )}
     </motion.div>
   )
 }

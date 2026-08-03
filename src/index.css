@@ -20,25 +20,44 @@
   --radius-card: 1.25rem;
 }
 
-html, body, #root {
-  min-height: 100%;
+html {
+  height: 100%;
+  overflow-x: hidden;
+  /* Prevent rubber-band / overscroll drag shake */
+  overscroll-behavior: none;
+  touch-action: pan-y;
 }
 
 body {
   margin: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  touch-action: pan-y;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   background: var(--bg-page);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  /* Stop iOS pull-to-refresh / rubber band on many devices */
+  position: relative;
+}
+
+#root {
+  min-height: 100%;
+  overflow-x: hidden;
+  overscroll-behavior: none;
 }
 
 .pastel-page {
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     radial-gradient(ellipse 80% 60% at 10% 20%, rgba(168, 230, 207, 0.45), transparent 50%),
     radial-gradient(ellipse 70% 50% at 90% 10%, rgba(255, 211, 182, 0.4), transparent 45%),
     radial-gradient(ellipse 60% 40% at 50% 90%, rgba(160, 210, 235, 0.35), transparent 50%),
     var(--bg-page);
+  overflow-x: hidden;
 }
 
 .pastel-card {
@@ -52,41 +71,49 @@ body {
   border-radius: 9999px;
   font-weight: 600;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  touch-action: manipulation;
 }
 .pastel-btn:active {
   transform: scale(0.97);
 }
 
 .island-card {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  touch-action: manipulation;
 }
-.island-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 16px 40px rgba(45, 52, 54, 0.12);
+@media (hover: hover) {
+  .island-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(45, 52, 54, 0.12);
+  }
 }
 
 .option-btn {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  touch-action: manipulation;
 }
 .option-btn:active {
   transform: scale(0.98);
 }
 
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @keyframes floatGentle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-8px); }
 }
 .float-gentle {
   animation: floatGentle 3.5s ease-in-out infinite;
 }
-
-@keyframes bounceIn {
-  0% { transform: scale(0.6); opacity: 0; }
-  60% { transform: scale(1.08); }
-  100% { transform: scale(1); opacity: 1; }
-}
-.bounce-in {
-  animation: bounceIn 0.45s ease-out forwards;
+@media (prefers-reduced-motion: reduce) {
+  .float-gentle { animation: none; }
 }
 
 [data-contrast="high"] {
@@ -108,6 +135,16 @@ body {
   font-family: "Comic Sans MS", "OpenDyslexic", system-ui, sans-serif;
 }
 
+/* Stable map container — no drag, no layout shift */
+.kingdom-map-shell {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -117,7 +154,4 @@ body {
 ::-webkit-scrollbar-thumb {
   background: rgba(45, 52, 54, 0.15);
   border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(45, 52, 54, 0.25);
 }
