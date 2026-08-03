@@ -82,7 +82,15 @@ export default function App() {
             onDone={() => startQuiz(teachTopic, 'math')}
           />
         )}
-        {page === 'mock' && <MockExamPage key="mock" onGoHome={goHome} />}
+        {page === 'mock' && (
+          <MockExamPage
+            key="mock"
+            onGoHome={goHome}
+            onOpenWorld={(w) => setPage(w)}
+            onStartQuiz={startQuiz}
+            onSmartQuest={() => setPage('smart')}
+          />
+        )}
         {page === 'review' && (
           <ReviewGardenPage
             key="review"

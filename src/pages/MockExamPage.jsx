@@ -1,52 +1,47 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { shuffleQuestions } from '../utils/shuffle'
-import { mathCategories } from '../data/mathQuestions'
-import { generateQuestions } from '../utils/dynamicQuestions'
+import { motion, AnimatePresence } from 'framer-motion'
+import { buildCraftMockPaper, diagnosePaper, MCQ_COUNT, SA_COUNT } from '../world/adaptive/mockPaper'
 import { recordMock } from '../utils/progress'
-import Mascot, { pickLine } from '../components/Mascot'
+import { recordAdaptiveResult, endAdaptiveSession } from '../world/adaptive/learnerModel'
+import Mascot from '../components/Mascot'
 import ShortAnswerInput from '../components/ShortAnswerInput'
 
-/** AEIS-style composition: 29 MCQ + 17 short-answer */
-const MCQ_COUNT = 29
-const SA_COUNT = 17
-const TIME_LIMIT_SEC = 30 * 60 // 30 min for combined paper feel
+const TIME_LIMIT_SEC = 30 * 60
 
-function buildPaper() {
-  // Always generate fresh items — never reuse a fixed paper
-  const mcq = generateQuestions('all', MCQ_COUNT * 2)
-    .filter((q) => q.format !== 'short_answer')
-    .slice(0, MCQ_COUNT)
-    .map((q) => ({ ...q, format: 'mcq' }))
-  const sa = generateQuestions('all', SA_COUNT * 2)
-    .map((q) => {
-      if (q.format === 'short_answer') return q
-      // force short-answer style for part 2
-      return {
-        ...q,
-        id: `sa_${q.id}`,
-        format: 'short_answer',
-        options: undefined,
-        question: q.question.replace(/\?$/, '').includes('=')
-          ? q.question
-          : q.question,
-      }
-    })
-    .slice(0, SA_COUNT)
-  return [...shuffleQuestions(mcq), ...shuffleQuestions(sa)]
+function formatTime(sec) {
+  const m = Math.floor(sec / 60)
+  const s = sec % 60
+  return `${m}:${String(s).padStart(2, '0')}`
 }
 
-export default function MockExamPage({ onGoHome }) {
+/**
+ * Phase 5 — Mock as craft
+ * Solemn exam mode: no teaching mid-paper, timed optional, diagnostic re-entry paths.
+ */
+export default function MockExamPage({ onGoHome, onOpenWorld, onStartQuiz, onSmartQuest }) {
+  const [paperKey, setPaperKey] = useState(0)
   const [started, setStarted] = useState(false)
   const [timed, setTimed] = useState(true)
   const [secondsLeft, setSecondsLeft] = useState(TIME_LIMIT_SEC)
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [startTs, setStartTs] = useState(null)
+  const [diag, setDiag] = useState(null)
+  const [part, setPart] = useState('mcq') // mcq | sa
 
-  const paper = useMemo(() => buildPaper(), [])
-  const mcqPart = paper.filter((q) => q.format !== 'short_answer')
-  const saPart = paper.filter((q) => q.format === 'short_answer')
+  const { mcq, sa, all } = useMemo(() => buildCraftMockPaper(), [paperKey])
+  const paper = all
+  const visible = part === 'mcq' ? mcq : sa
+
+  useEffect(() => {
+    if (!started || !timed || submitted) return
+    if (secondsLeft <= 0) {
+      submit()
+      return
+    }
+    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000)
+    return () => clearTimeout(t)
+  }, [started, timed, secondsLeft, submitted]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const normalize = (a, b) =>
     String(a ?? '')
@@ -58,172 +53,270 @@ export default function MockExamPage({ onGoHome }) {
 
   const submit = useCallback(() => {
     if (submitted) return
-    let correct = 0
-    const byTopic = {}
+    const result = diagnosePaper(paper, answers)
     paper.forEach((q) => {
       const ok = normalize(answers[q.id], q.correctAnswer)
-      if (ok) correct++
-      if (!byTopic[q.category]) byTopic[q.category] = { correct: 0, total: 0 }
-      byTopic[q.category].total++
-      if (ok) byTopic[q.category].correct++
+      if (q.skillId) recordAdaptiveResult(q.skillId, ok)
     })
-    const scorePct = paper.length ? Math.round((correct / paper.length) * 100) : 0
     recordMock({
-      scorePct,
-      correct,
-      total: paper.length,
-      byTopic,
+      scorePct: result.scorePct,
+      correct: result.correct,
+      total: result.total,
+      byTopic: result.byTopic,
       durationSec: startTs ? Math.round((Date.now() - startTs) / 1000) : 0,
     })
+    endAdaptiveSession(Math.max(5, startTs ? Math.round((Date.now() - startTs) / 60000) : 15))
+    setDiag(result)
     setSubmitted(true)
   }, [answers, paper, startTs, submitted])
 
-  useEffect(() => {
-    if (!started || !timed || submitted) return
-    if (secondsLeft <= 0) {
-      submit()
-      return
-    }
-    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000)
-    return () => clearTimeout(t)
-  }, [started, timed, secondsLeft, submitted, submit])
+  const start = () => {
+    setAnswers({})
+    setSubmitted(false)
+    setDiag(null)
+    setSecondsLeft(TIME_LIMIT_SEC)
+    setStartTs(Date.now())
+    setPart('mcq')
+    setStarted(true)
+  }
 
-  const correctCount = paper.filter((q) => normalize(answers[q.id], q.correctAnswer)).length
-  const mm = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
-  const ss = String(secondsLeft % 60).padStart(2, '0')
+  const answeredCount = Object.keys(answers).length
 
+  // —— Pre-exam temple ——
   if (!started) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 min-h-screen px-4 py-8 max-w-lg mx-auto">
-        <button type="button" onClick={onGoHome} className="pastel-btn px-4 py-2 bg-white shadow-card text-sm mb-6 border border-black/5">
-          ← Kingdom
-        </button>
-        <h1 className="text-3xl font-bold text-ink mb-2">AEIS-Style Mock Paper</h1>
-        <p className="text-muted mb-2">
-          <strong>{MCQ_COUNT} multiple-choice</strong> + <strong>{SA_COUNT} short-answer</strong> questions
-        </p>
-        <p className="text-muted text-sm mb-6">
-          Mixed Primary 1 Math topics · Optional 30-minute timer · Randomised each attempt
-        </p>
-        <Mascot mood="encourage" message="Read carefully. Show working on short answers if you can!" className="mb-6" />
-        <label className="flex items-center gap-3 mb-6 text-ink">
-          <input type="checkbox" checked={timed} onChange={(e) => setTimed(e.target.checked)} />
-          Timed mode (30 minutes)
-        </label>
-        <button
-          type="button"
-          onClick={() => {
-            setStartTs(Date.now())
-            setStarted(true)
-          }}
-          className="w-full pastel-btn py-4 bg-ink text-white font-bold"
-        >
-          Start mock exam
-        </button>
-      </motion.div>
+      <div className="min-h-screen overflow-x-hidden bg-[#F7F5F0] px-4 py-8">
+        <div className="max-w-lg mx-auto">
+          <button type="button" onClick={onGoHome} className="text-sm text-ink/60 mb-6">
+            ← Kingdom
+          </button>
+          <div className="text-center mb-8">
+            <div className="text-5xl mb-3">🏛️</div>
+            <h1 className="text-3xl font-black text-ink tracking-tight">Mock Exam Hall</h1>
+            <p className="text-sm text-ink/60 mt-2 leading-relaxed">
+              A calm, fair practice paper — like the real AEIS math mood.
+              <br />
+              No hints during the paper. Feedback comes after you submit.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-black/5 shadow-sm p-5 mb-4 text-sm text-ink space-y-2">
+            <p>
+              <strong>Part A</strong> — {MCQ_COUNT} multiple choice
+            </p>
+            <p>
+              <strong>Part B</strong> — {SA_COUNT} short answers
+            </p>
+            <p>
+              <strong>Time</strong> — {TIME_LIMIT_SEC / 60} minutes recommended (optional timer)
+            </p>
+            <p className="text-ink/50 text-xs pt-2">Paper is freshly generated every attempt. Teaching islands unlock after results.</p>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-ink mb-6 cursor-pointer">
+            <input type="checkbox" checked={timed} onChange={(e) => setTimed(e.target.checked)} className="rounded" />
+            Use countdown timer
+          </label>
+
+          <button type="button" onClick={start} className="w-full py-4 rounded-full bg-ink text-white font-bold text-base shadow-md">
+            Begin mock paper
+          </button>
+          {onSmartQuest && (
+            <button
+              type="button"
+              onClick={onSmartQuest}
+              className="w-full mt-3 py-3 rounded-full bg-white border border-black/10 text-sm font-semibold text-ink"
+            >
+              Warm up with Smart Quest first
+            </button>
+          )}
+        </div>
+      </div>
     )
   }
 
-  if (submitted) {
-    const scorePct = paper.length ? Math.round((correctCount / paper.length) * 100) : 0
+  // —— Results + remediation ——
+  if (submitted && diag) {
+    const readinessLabel = {
+      strong: 'Strong readiness',
+      building: 'Building readiness',
+      emerging: 'Emerging — keep practising',
+      needs_support: 'Needs guided support',
+    }[diag.readiness]
+
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 min-h-screen px-4 py-8 max-w-lg mx-auto pb-16">
-        <h1 className="text-2xl font-bold text-ink mb-2">Mock results</h1>
-        <Mascot mood={scorePct >= 70 ? 'celebrate' : 'encourage'} message={pickLine('complete', correctCount)} className="mb-4" />
-        <div className="pastel-card p-6 text-center mb-4">
-          <div className="text-4xl font-bold text-success">{scorePct}%</div>
-          <div className="text-muted">
-            {correctCount} / {paper.length} correct
+      <div className="min-h-screen overflow-x-hidden bg-[#F7F5F0] px-4 py-8 pb-20">
+        <div className="max-w-lg mx-auto">
+          <h1 className="text-2xl font-black text-ink mb-1">Results</h1>
+          <p className="text-sm text-ink/60 mb-4">Mock complete — here is your map forward</p>
+
+          <div className="bg-white rounded-2xl border border-black/5 p-6 text-center mb-4">
+            <div className="text-5xl font-black text-ink">{diag.scorePct}%</div>
+            <p className="text-sm text-ink/70 mt-1">
+              {diag.correct} / {diag.total} correct
+            </p>
+            <p className="text-xs font-bold uppercase tracking-wide text-success mt-3">{readinessLabel}</p>
           </div>
-          <div className="text-xs text-muted mt-1">
-            MCQ {mcqPart.filter((q) => normalize(answers[q.id], q.correctAnswer)).length}/{mcqPart.length} · SA{' '}
-            {saPart.filter((q) => normalize(answers[q.id], q.correctAnswer)).length}/{saPart.length}
+
+          <div className="bg-white rounded-2xl border border-black/5 p-4 mb-4">
+            <h2 className="font-bold text-ink mb-2">Recommended islands</h2>
+            <p className="text-xs text-ink/50 mb-3">Start with the weakest topics — re-watch the story, then practise.</p>
+            <div className="space-y-2">
+              {diag.weakTopics.slice(0, 4).map((t) => (
+                <div key={t.id} className="flex items-center justify-between gap-2 rounded-xl bg-[#F7F5F0] px-3 py-2">
+                  <div>
+                    <div className="text-sm font-semibold text-ink">{t.remediation?.label || t.id}</div>
+                    <div className="text-[10px] text-ink/50">
+                      {t.correct}/{t.total} · {Math.round(t.accuracy * 100)}%
+                    </div>
+                  </div>
+                  {t.remediation?.world && onOpenWorld ? (
+                    <button
+                      type="button"
+                      className="text-xs font-bold px-3 py-1.5 rounded-full bg-ink text-white"
+                      onClick={() => onOpenWorld(t.remediation.world)}
+                    >
+                      Open island
+                    </button>
+                  ) : t.remediation?.quiz && onStartQuiz ? (
+                    <button
+                      type="button"
+                      className="text-xs font-bold px-3 py-1.5 rounded-full bg-ink text-white"
+                      onClick={() => onStartQuiz(t.remediation.quiz, 'math')}
+                    >
+                      Practise
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
           </div>
+
+          <Mascot
+            mood={diag.scorePct >= 70 ? 'happy' : 'encourage'}
+            message={
+              diag.scorePct >= 80
+                ? 'Excellent composure. Keep skills warm with short Smart Quests.'
+                : 'A mock is a map, not a judgement. Visit the islands that need you.'
+            }
+            className="mb-4"
+          />
+
+          <button
+            type="button"
+            className="w-full py-3 rounded-full bg-ink text-white font-bold mb-2"
+            onClick={() => {
+              setPaperKey((k) => k + 1)
+              setStarted(false)
+              setSubmitted(false)
+              setDiag(null)
+              setAnswers({})
+            }}
+          >
+            New mock paper
+          </button>
+          {onSmartQuest && (
+            <button type="button" onClick={onSmartQuest} className="w-full py-3 rounded-full bg-white border border-black/10 font-semibold text-sm mb-2">
+              Adaptive Smart Quest
+            </button>
+          )}
+          <button type="button" onClick={onGoHome} className="w-full py-3 rounded-full bg-white border border-black/10 text-sm">
+            Kingdom
+          </button>
         </div>
-        <h2 className="font-bold text-ink mb-2">By topic</h2>
-        <div className="space-y-2 mb-6">
-          {mathCategories.map((c) => {
-            const qs = paper.filter((q) => q.category === c.id)
-            if (!qs.length) return null
-            const ok = qs.filter((q) => normalize(answers[q.id], q.correctAnswer)).length
+      </div>
+    )
+  }
+
+  // —— In-paper ——
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-[#F7F5F0] px-4 py-4 pb-28">
+      <div className="max-w-lg mx-auto">
+        <div className="flex items-center justify-between mb-3 sticky top-0 bg-[#F7F5F0]/95 py-2 z-20">
+          <span className="text-xs font-bold uppercase tracking-wide text-ink/50">Mock · quiet mode</span>
+          {timed ? (
+            <span className={`font-mono text-sm font-bold ${secondsLeft < 120 ? 'text-coral' : 'text-ink'}`}>
+              {formatTime(secondsLeft)}
+            </span>
+          ) : (
+            <span className="text-xs text-ink/40">Untimed</span>
+          )}
+        </div>
+
+        <div className="flex gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => setPart('mcq')}
+            className={`flex-1 py-2 rounded-full text-xs font-bold ${part === 'mcq' ? 'bg-ink text-white' : 'bg-white text-ink border border-black/10'}`}
+          >
+            Part A · MCQ ({mcq.filter((q) => answers[q.id] != null).length}/{mcq.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setPart('sa')}
+            className={`flex-1 py-2 rounded-full text-xs font-bold ${part === 'sa' ? 'bg-ink text-white' : 'bg-white text-ink border border-black/10'}`}
+          >
+            Part B · SA ({sa.filter((q) => answers[q.id] != null).length}/{sa.length})
+          </button>
+        </div>
+
+        <p className="text-[10px] text-ink/40 mb-3">
+          Answered {answeredCount}/{paper.length} · No teaching during the paper
+        </p>
+
+        <div className="space-y-4">
+          {visible.map((q, i) => {
+            const num = part === 'mcq' ? i + 1 : mcq.length + i + 1
             return (
-              <div key={c.id} className="pastel-card px-3 py-2 flex justify-between text-sm">
-                <span>
-                  {c.icon} {c.name}
-                </span>
-                <span className="font-semibold">
-                  {ok}/{qs.length}
-                </span>
+              <div key={q.id} className="bg-white rounded-xl border border-black/5 p-4">
+                <p className="text-xs font-bold text-ink/40 mb-1">Q{num}</p>
+                <p className="text-sm font-medium text-ink mb-3 leading-relaxed">{q.question}</p>
+                {q.format === 'short_answer' ? (
+                  <ShortAnswerInput
+                    question={q}
+                    selectedAnswer={answers[q.id]}
+                    onSelect={(id, val) => setAnswers((a) => ({ ...a, [id]: val }))}
+                    disabled={false}
+                    hideFeedback
+                  />
+                ) : (
+                  <div className="grid gap-2">
+                    {(q.options || []).map((opt) => {
+                      const sel = String(answers[q.id]) === String(opt)
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))}
+                          className={`text-left px-3 py-2.5 rounded-lg border text-sm ${
+                            sel ? 'border-ink bg-ink/5 font-semibold' : 'border-black/10 bg-white'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
-        <button type="button" onClick={onGoHome} className="w-full pastel-btn py-3 bg-ink text-white">
-          Back to Kingdom
-        </button>
-      </motion.div>
-    )
-  }
+      </div>
 
-  const renderQuestion = (q, displayNum) => (
-    <div key={q.id} className="pastel-card p-4">
-      <p className="text-sm font-medium text-ink mb-3">
-        <span className="text-muted mr-2">{displayNum}.</span>
-        {q.question}
-        {q.format === 'short_answer' && (
-          <span className="ml-2 text-[10px] font-bold uppercase bg-butter px-1.5 py-0.5 rounded">Short answer</span>
-        )}
-      </p>
-      {q.format === 'short_answer' ? (
-        <ShortAnswerInput
-          question={q}
-          selectedAnswer={answers[q.id]}
-          onSelect={(id, val) => setAnswers((a) => ({ ...a, [id]: val }))}
-          disabled={false}
-        />
-      ) : (
-        <div className="grid gap-2">
-          {(q.options || []).map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))}
-              className={`option-btn text-left px-3 py-2 rounded-xl border-2 text-sm ${
-                answers[q.id] === opt ? 'border-ink bg-mint/40 font-semibold' : 'border-black/5 bg-soft/40'
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 border-t border-black/5 p-3 z-30">
+        <div className="max-w-lg mx-auto flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm('Submit mock paper? You cannot change answers after.')) submit()
+            }}
+            className="flex-1 py-3 rounded-full bg-ink text-white font-bold text-sm"
+          >
+            Submit paper
+          </button>
         </div>
-      )}
+      </div>
     </div>
-  )
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 min-h-screen px-4 py-6 pb-28 max-w-2xl mx-auto">
-      <div className="sticky top-0 z-10 pastel-card px-4 py-3 mb-4 flex justify-between items-center">
-        <span className="text-sm font-semibold text-ink">Mock · 29 MCQ + 17 SA</span>
-        <span className={`font-mono font-bold ${secondsLeft < 60 && timed ? 'text-coral' : 'text-ink'}`}>
-          {timed ? `${mm}:${ss}` : 'Untimed'}
-        </span>
-        <span className="text-sm text-muted">
-          {Object.keys(answers).length}/{paper.length}
-        </span>
-      </div>
-
-      <h2 className="font-bold text-ink mb-2">Part 1 — Multiple choice</h2>
-      <div className="space-y-4 mb-8">{mcqPart.map((q, i) => renderQuestion(q, i + 1))}</div>
-
-      <h2 className="font-bold text-ink mb-2">Part 2 — Short answers</h2>
-      <p className="text-xs text-muted mb-3">Type the answer. Working is optional but helpful.</p>
-      <div className="space-y-4">{saPart.map((q, i) => renderQuestion(q, mcqPart.length + i + 1))}</div>
-
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-cream via-cream to-transparent">
-        <button type="button" onClick={submit} className="w-full max-w-2xl mx-auto block pastel-btn py-4 bg-ink text-white font-bold">
-          Submit mock exam
-        </button>
-      </div>
-    </motion.div>
   )
 }
