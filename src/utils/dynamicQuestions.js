@@ -1,3 +1,4 @@
+import { gateQuestion, stemKey } from './questionQuality'
 /**
  * Procedural AEIS P1 Math question generator.
  * Every call produces fresh numbers, contexts, and distractors — never a fixed set.
@@ -464,7 +465,7 @@ const generators = {
       correctAnswer: `${hh}:00`,
       explanation: `Long hand on 12 means o'clock → ${hh}:00.`,
     }
-  }
+  },
 
   money() {
     const coins = [5, 10, 20, 50]
@@ -607,20 +608,23 @@ export function generateQuestions(topicId = 'all', count = 12) {
       : [topicId]
 
   const out = []
-  for (let i = 0; i < count; i++) {
-    const t = topics[i % topics.length]
+  const seen = new Set()
+  let guard = 0
+  while (out.length < count && guard < count * 30) {
+    guard++
+    const t = topics[out.length % topics.length]
     try {
-      const q = generators[t]()
-      if (q.format === 'short_answer') {
-        delete q.options
-      } else if (q.options) {
-        q.options = shuffleArray(q.options.map(String))
-      }
+      const raw = generators[t]()
+      const q = gateQuestion(raw)
+      if (!q) continue
+      const k = stemKey(q)
+      if (seen.has(k)) continue
+      seen.add(k)
       q.subject = 'math'
       q.generated = true
       out.push(q)
     } catch {
-      // skip rare generator edge cases
+      // skip
     }
   }
   return shuffleArray(out)

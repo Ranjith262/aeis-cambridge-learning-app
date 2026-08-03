@@ -1,5 +1,5 @@
 /**
- * AEIS-style mock paper — unique stems only, balanced topics.
+ * AEIS mock paper — gated unique questions only.
  */
 import { generatePlaceValueQuestion } from '../placeValue/pvGenerator'
 import { generateBondQuestion } from '../bonds/bondsGenerator'
@@ -9,47 +9,11 @@ import { generateMoneyQuestion } from '../money/moneyGenerator'
 import { generateTimeQuestion } from '../time/timeGenerator'
 import { generateShapeQuestion } from '../shapes/shapesGenerator'
 import { generateQuestions } from '../../utils/dynamicQuestions'
+import { gateQuestion, stemKey, collectUnique } from '../../utils/questionQuality'
 import { shuffleArray } from '../../utils/shuffle'
 
 export const MCQ_COUNT = 29
 export const SA_COUNT = 17
-
-
-function sanitizeOptions(q) {
-  if (!q.options || !Array.isArray(q.options)) return q
-  const seen = new Set()
-  const out = []
-  for (const o of q.options) {
-    const k = String(o).replace(/\s+/g, ' ').trim()
-    if (!k || seen.has(k)) continue
-    seen.add(k)
-    out.push(String(o).trim())
-  }
-  const correct = String(q.correctAnswer).replace(/\s+/g, ' ').trim()
-  // drop options that are commutative twin of correct for a+b
-  const cm = correct.match(/^(\d+)\s*\+\s*(\d+)$/)
-  const filtered = out.filter((o) => {
-    if (!cm) return true
-    const m = String(o).match(/^(\d+)\s*\+\s*(\d+)$/)
-    if (!m) return true
-    const same = (m[1] === cm[1] && m[2] === cm[2]) || (m[1] === cm[2] && m[2] === cm[1])
-    if (same && String(o).replace(/\s+/g, ' ').trim() !== correct) return false
-    return true
-  })
-  if (!filtered.map((x) => x.replace(/\s+/g, ' ').trim()).includes(correct)) {
-    filtered.unshift(String(q.correctAnswer))
-  }
-  while (filtered.length < 4) filtered.push(`—${filtered.length}`)
-  return { ...q, options: filtered.slice(0, 4), correctAnswer: String(q.correctAnswer).trim() }
-}
-
-function stemKey(q) {
-  return String(q?.question || '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .replace(/\d+/g, '#')
-    .trim()
-}
 
 const FACTORIES = [
   generatePlaceValueQuestion,
@@ -62,160 +26,99 @@ const FACTORIES = [
   () => generateQuestions('wordProblems', 1)[0],
   () => generateQuestions('pictureGraphs', 1)[0],
   () => generateQuestions('measurement', 1)[0],
+  () => generateQuestions('numbersTo100', 1)[0],
 ]
 
-function collectUnique(count, preferMcq) {
+function rotateFactory(i) {
+  return FACTORIES[i % FACTORIES.length]
+}
+
+function collectPaperItems(need, preferFormat) {
   const out = []
   const seen = new Set()
+  let i = 0
   let guard = 0
-  while (out.length < count && guard < count * 40) {
+  while (out.length < need && guard < need * 60) {
     guard++
-    const factory = FACTORIES[out.length % FACTORIES.length]
-    let q
+    let raw
     try {
-      q = factory()
+      raw = rotateFactory(i++)()
     } catch {
-      q = generateAddQuestion()
+      raw = generateAddQuestion()
     }
-    if (!q || q.correctAnswer == null || !q.question) continue
-    const key = stemKey(q)
-    if (!key || seen.has(key)) continue
-    if (preferMcq && (!q.options || q.options.length < 2)) {
-      // try to only take MCQ for part A
-      if (guard < count * 25) continue
+    const q = gateQuestion(raw)
+    if (!q) continue
+    if (preferFormat === 'mcq' && q.format !== 'mcq') continue
+    if (preferFormat === 'sa') {
+      // convert to SA
+      const sa = {
+        ...q,
+        id: `sa_${q.id}`,
+        format: 'short_answer',
+        options: undefined,
+      }
+      const k = stemKey(sa)
+      if (seen.has(k)) continue
+      seen.add(k)
+      out.push(sa)
+      continue
     }
-    if (!preferMcq && q.options && q.options.length >= 2) {
-      // strip to SA style later
-    }
-    seen.add(key)
-    out.push({ ...q, id: q.id || `q_${out.length}_${Date.now()}` })
-  }
-  // fill gaps with addition if needed
-  while (out.length < count) {
-    const q = generateAddQuestion()
-    const key = stemKey(q) + '_' + out.length
-    if (seen.has(stemKey(q))) {
-      q.question = `${q.question} (set ${out.length + 1})`
-    }
-    seen.add(stemKey(q))
+    const k = stemKey(q)
+    if (seen.has(k)) continue
+    seen.add(k)
     out.push(q)
   }
   return out
 }
 
-function toMcq(q) {
-  if (q.options && q.options.length >= 2) return { ...q, format: 'mcq' }
-  // cannot force MCQ without options — regenerate add
-  const alt = generateAddQuestion()
-  return { ...alt, format: 'mcq' }
-}
-
-function toSa(q) {
-  const { options, ...rest } = q
-  return {
-    ...rest,
-    id: `sa_${q.id}`,
-    format: 'short_answer',
-    options: undefined,
-  }
-}
-
 export function buildCraftMockPaper() {
-  // Collect more than needed, dedupe, then split
-  const pool = collectUnique(MCQ_COUNT + SA_COUNT + 20, false)
-  const seen = new Set()
-  const unique = []
-  for (const q of pool) {
+  const mcq = collectPaperItems(MCQ_COUNT, 'mcq')
+  // Fill MCQ if short
+  let fill = 0
+  while (mcq.length < MCQ_COUNT && fill < 80) {
+    fill++
+    const q = gateQuestion(generateAddQuestion()) || gateQuestion(generateTimeQuestion())
+    if (!q || q.format !== 'mcq') continue
     const k = stemKey(q)
-    if (seen.has(k)) continue
-    seen.add(k)
-    unique.push(q)
-  }
-
-  const withOpts = shuffleArray(unique.filter((q) => q.options && q.options.length >= 2))
-  const without = shuffleArray(unique.filter((q) => !q.options || q.options.length < 2))
-
-  const mcq = []
-  const mcqSeen = new Set()
-  for (const q of withOpts) {
-    if (mcq.length >= MCQ_COUNT) break
-    const k = stemKey(q)
-    if (mcqSeen.has(k)) continue
-    mcqSeen.has(k) || mcqSeen.add(k)
-    mcq.push(sanitizeOptions(toMcq(q)))
-  }
-  while (mcq.length < MCQ_COUNT) {
-    const q = toMcq(generateAddQuestion())
-    const k = stemKey(q)
-    if (mcqSeen.has(k)) {
-      q.question = `${q.a != null ? q.a : ''} + ${q.b != null ? q.b : ''} = ?`.trim()
-      // force unique by regenerating
-      const q2 = generateAddQuestion()
-      const k2 = stemKey(q2)
-      if (mcqSeen.has(k2)) continue
-      mcqSeen.add(k2)
-      mcq.push(toMcq(q2))
-      continue
-    }
-    mcqSeen.add(k)
+    if (mcq.some((x) => stemKey(x) === k)) continue
     mcq.push(q)
   }
 
+  const saSeen = new Set(mcq.map(stemKey))
   const sa = []
-  const saSeen = new Set([...mcqSeen])
-  const saPool = shuffleArray([...without, ...withOpts.filter((q) => !mcqSeen.has(stemKey(q)))])
-  for (const q of saPool) {
-    if (sa.length >= SA_COUNT) break
-    const k = stemKey(q)
+  let g = 0
+  while (sa.length < SA_COUNT && g < SA_COUNT * 50) {
+    g++
+    const raw = rotateFactory(g)()
+    const q = gateQuestion(raw)
+    if (!q) continue
+    const saQ = {
+      ...q,
+      id: `sa_${q.id}_${sa.length}`,
+      format: 'short_answer',
+      options: undefined,
+    }
+    const k = stemKey(saQ)
     if (saSeen.has(k)) continue
     saSeen.add(k)
-    sa.push(toSa(q))
-  }
-  while (sa.length < SA_COUNT) {
-    const q = generateAddQuestion()
-    const k = stemKey(q)
-    if (saSeen.has(k)) continue
-    saSeen.add(k)
-    sa.push(toSa(q))
+    sa.push(saQ)
   }
 
-  // Final uniqueness pass across full paper
-  const all = []
-  const finalSeen = new Set()
-  for (const q of [...mcq.slice(0, MCQ_COUNT), ...sa.slice(0, SA_COUNT)]) {
-    let k = stemKey(q)
-    if (finalSeen.has(k)) continue
-    finalSeen.add(k)
-    all.push(q)
-  }
-  // If we dropped dupes, refill
-  while (all.length < MCQ_COUNT + SA_COUNT) {
-    const q = toMcq(generateTimeQuestion())
+  const all = [...mcq.slice(0, MCQ_COUNT), ...sa.slice(0, SA_COUNT)]
+  // Final uniqueness
+  const final = []
+  const fSeen = new Set()
+  for (const q of all) {
     const k = stemKey(q)
-    if (finalSeen.has(k)) continue
-    finalSeen.add(k)
-    all.push(q)
-  }
-
-  const finalMcq = all.filter((q) => q.format !== 'short_answer').slice(0, MCQ_COUNT)
-  let finalSa = all.filter((q) => q.format === 'short_answer').slice(0, SA_COUNT)
-  while (finalMcq.length < MCQ_COUNT) {
-    const q = toMcq(generateAddQuestion())
-    if (finalSeen.has(stemKey(q))) continue
-    finalSeen.add(stemKey(q))
-    finalMcq.push(q)
-  }
-  while (finalSa.length < SA_COUNT) {
-    const q = toSa(generateSubQuestion())
-    if (finalSeen.has(stemKey(q))) continue
-    finalSeen.add(stemKey(q))
-    finalSa.push(q)
+    if (fSeen.has(k)) continue
+    fSeen.add(k)
+    final.push(q)
   }
 
   return {
-    mcq: finalMcq.slice(0, MCQ_COUNT),
-    sa: finalSa.slice(0, SA_COUNT),
-    all: [...finalMcq.slice(0, MCQ_COUNT), ...finalSa.slice(0, SA_COUNT)],
+    mcq: final.filter((q) => q.format !== 'short_answer').slice(0, MCQ_COUNT),
+    sa: final.filter((q) => q.format === 'short_answer').slice(0, SA_COUNT),
+    all: final.slice(0, MCQ_COUNT + SA_COUNT),
   }
 }
 
@@ -241,7 +144,7 @@ export function diagnosePaper(paper, answers) {
     const ok = normalize(answers[q.id], q.correctAnswer)
     if (ok) correct++
     const cat = q.category || 'general'
-    if (!byTopic[cat]) byTopic[cat] = { correct: 0, total: 0, skillIds: {} }
+    if (!byTopic[cat]) byTopic[cat] = { correct: 0, total: 0 }
     byTopic[cat].total++
     if (ok) byTopic[cat].correct++
   })
